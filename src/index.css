@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  --font-poppins: 'Poppins', sans-serif;
+  --font-fredoka: 'Fredoka', sans-serif;
+  
+  --color-neo-bg: #FFF8E7; /* Cream */
+  --color-neo-pink: #FFB5C6; /* Soft pink */
+  --color-neo-blue: #A2D2FF;
+  --color-neo-yellow: #FDEE87; /* Pastel yellow */
+  --color-neo-orange: #FFD2A5; /* Light orange */
+  --color-neo-dark: #1E1E1E; /* Thick black outline */
+  
+  --shadow-neo: 6px 6px 0px 0px var(--color-neo-dark);
+  --shadow-neo-hover: 2px 2px 0px 0px var(--color-neo-dark);
+}
+
+@layer base {
+  body {
+    @apply bg-neo-bg text-neo-dark font-poppins min-h-screen overflow-x-hidden;
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='%23FFB5C6' stroke='%231E1E1E' stroke-width='2' stroke-linejoin='round' d='M12 11c-2.5 0-4 2-4 4s1.5 4 4 4 4-2 4-4-1.5-4-4-4zm-4-4c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2zm8 0c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2zm-12 1c-.8 0-1.5 1-1.5 2s.7 2 1.5 2 1.5-1 1.5-2-.7-2-1.5-2zm16 0c-.8 0-1.5 1-1.5 2s.7 2 1.5 2 1.5-1 1.5-2-.7-2-1.5-2z'/></svg>") 12 12, auto;
+  }
+
+  button, a, [role="button"] {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='%231E1E1E' stroke='%23FFB5C6' stroke-width='2' stroke-linejoin='round' d='M12 11c-2.5 0-4 2-4 4s1.5 4 4 4 4-2 4-4-1.5-4-4-4zm-4-4c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2zm8 0c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2zm-12 1c-.8 0-1.5 1-1.5 2s.7 2 1.5 2 1.5-1 1.5-2-.7-2-1.5-2zm16 0c-.8 0-1.5 1-1.5 2s.7 2 1.5 2 1.5-1 1.5-2-.7-2-1.5-2z'/></svg>") 12 12, pointer !important;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-fredoka font-bold tracking-wide;
+  }
+
+  /* Make all transitions snappier */
+  *, *::before, *::after {
+    transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
+
+@layer components {
+  .neo-card {
+    @apply bg-white border-4 border-neo-dark rounded-xl shadow-neo transition-all duration-100 ease-in-out;
+  }
+
+  .neo-card:hover {
+    @apply shadow-neo-hover translate-x-[4px] translate-y-[4px] -rotate-1;
+  }
+
+  .neo-btn {
+    @apply inline-flex items-center justify-center font-bold font-fredoka tracking-wide border-4 border-neo-dark rounded-full shadow-neo transition-all duration-100 ease-in-out px-6 py-3 cursor-pointer select-none;
+  }
+
+  .neo-btn:hover {
+    @apply shadow-neo-hover translate-x-[4px] translate-y-[4px] -rotate-2;
+  }
+
+  .neo-btn:active {
+    @apply shadow-none translate-x-[6px] translate-y-[6px] scale-[0.97];
+  }
+
+  .neo-btn-primary {
+    @apply bg-neo-pink text-neo-dark;
+  }
+
+  .neo-btn-secondary {
+    @apply bg-neo-yellow text-neo-dark;
+  }
+
+  .neo-input {
+    @apply w-full border-4 border-neo-dark rounded-lg px-4 py-3 bg-white font-poppins focus:outline-none focus:ring-4 focus:ring-neo-pink focus:border-neo-dark transition-all duration-100;
+  }
+
+  /* Loading spinner for buttons */
+  .neo-spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 3px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: neo-spin 0.5s linear infinite;
+  }
+
+  @keyframes neo-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Skeleton loading shimmer */
+  .neo-skeleton {
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: neo-shimmer 1.2s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  @keyframes neo-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Marquee Animation */
+  .marquee-container {
+    @apply overflow-hidden whitespace-nowrap bg-neo-yellow border-y-4 border-neo-dark py-3 relative flex items-center;
+  }
+  .marquee-content {
+    display: inline-flex;
+    animation: marquee 15s linear infinite;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+/* Toast & Dialog Animations */
+.animate-slide-down {
+  animation: slideDownBouncy 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideDownBouncy {
+  0% { opacity: 0; transform: translate(-50%, -150%); }
+  50% { opacity: 1; transform: translate(-50%, 10%); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.animate-scale-in {
+  animation: scaleInBouncy 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleInBouncy {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
