@@ -39,10 +39,10 @@ const LandingPage = () => {
           <div className="flex-1 relative">
             <div className="absolute inset-0 bg-neo-blue rounded-full border-4 border-neo-dark translate-x-4 translate-y-4 shadow-neo"></div>
             <img 
-              src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+              src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50" 
               srcSet="
-                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80 400w,
-                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80 800w
+                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=50 400w,
+                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50 800w
               "
               sizes="(max-width: 600px) 400px, 800px"
               alt="Cute cat" 
