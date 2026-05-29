@@ -51,6 +51,7 @@ const Navbar = () => {
           {/* Mobile Hamburger */}
           <button 
             onClick={() => setMobileOpen(!mobileOpen)} 
+            aria-label="Toggle navigation menu"
             className="md:hidden bg-white border-3 border-neo-dark p-2 rounded-lg shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
