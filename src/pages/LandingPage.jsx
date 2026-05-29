@@ -41,6 +41,8 @@ const LandingPage = () => {
             <img 
               src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
               alt="Cute cat" 
+              fetchpriority="high"
+              decoding="async"
               className="relative z-10 w-full h-[300px] md:h-[500px] object-cover rounded-full border-4 border-neo-dark"
             />
             
