@@ -5,6 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 import api from '../../api/axios';
 import { Camera, Clock, CheckCircle2, UtensilsCrossed, AlertCircle, Star, MapPin } from 'lucide-react';
 import { useToast } from '../../components/Toast';
+import { loadSnapScript } from '../../utils/snap';
 
 const SitterBooking = () => {
   const { user } = useContext(AuthContext);
@@ -129,6 +130,7 @@ const SitterBooking = () => {
       showToast(`Pesanan sitter ${selectedSitter?.name} untuk ${selectedCat?.name} berhasil! 🐾`, 'success');
 
       if (res.data.snap_token) {
+        await loadSnapScript();
         window.snap.pay(res.data.snap_token, {
           onSuccess: async function() {
             await api.put(`/bookings/${res.data.id}/pay-success`);

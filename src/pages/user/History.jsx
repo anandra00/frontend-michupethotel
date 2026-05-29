@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
 import { Star, X, MapPin } from 'lucide-react';
 import { useToast } from '../../components/Toast';
+import { loadSnapScript } from '../../utils/snap';
 
 const STATUS_MAP = {
   pending: { label: 'Menunggu', bg: 'bg-neo-yellow' },
@@ -61,11 +62,12 @@ const History = () => {
     }
   };
 
-  const handlePayNow = (booking) => {
+  const handlePayNow = async (booking) => {
     if (!booking.snap_token) {
       showToast('Token pembayaran tidak ditemukan.', 'error');
       return;
     }
+    await loadSnapScript();
     window.snap.pay(booking.snap_token, {
       onSuccess: async function () {
         await api.put(`/bookings/${booking.id}/pay-success`);

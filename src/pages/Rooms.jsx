@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { useToast } from '../components/Toast';
+import { loadSnapScript } from '../utils/snap';
 import RoomCard from './Rooms/RoomCard';
 import BookingModal from './Rooms/BookingModal';
 
@@ -67,6 +68,7 @@ const Rooms = () => {
       setShowBooking(false);
 
       if (res.data.snap_token) {
+        await loadSnapScript();
         window.snap.pay(res.data.snap_token, {
           onSuccess: async function () {
             await api.put(`/bookings/${res.data.id}/pay-success`);
