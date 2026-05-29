@@ -22,7 +22,7 @@ const LandingPage = () => {
               🐾 #1 Premium Cat Hotel
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-fredoka font-black leading-tight text-neo-dark">
-              Michu <span className="text-neo-pink underline decoration-8 decoration-neo-dark">MeowStay</span>
+              Michu <span className="text-neo-dark underline decoration-8 decoration-neo-pink">MeowStay</span>
             </h1>
             <p className="text-base md:text-xl font-poppins font-medium text-neo-dark max-w-lg">
               Pet Hotel & Cat Care Service for Your Lovely Cats. We treat your cats like royalty!
