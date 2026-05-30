@@ -50,6 +50,7 @@ const History = () => {
   const { showToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [cancelConfirmation, setCancelConfirmation] = useState(null); // { id, isPaid, msg }
 
   const fetchBookings = async (page = 1) => {
     try {
@@ -159,21 +160,24 @@ const History = () => {
     });
   };
 
-  const handleCancelBooking = async (id, isPaid = false) => {
+  const triggerCancelBooking = (id, isPaid = false) => {
     let confirmMsg = 'Apakah Anda yakin ingin membatalkan pesanan ini?';
     if (isPaid) {
       confirmMsg = 'Apakah Anda yakin ingin membatalkan pesanan ini? Pembatalan lunas H-2 atau lebih sebelum check-in akan mendapatkan refund otomatis. Kurang dari H-2 tidak ada refund.';
     }
-    if (window.confirm(confirmMsg)) {
-      try {
-        const res = await api.post(`/bookings/${id}/cancel`);
-        showToast(res.data.message || 'Pesanan berhasil dibatalkan.', 'success');
-        fetchBookings(currentPage);
-      } catch (err) {
-        console.error(err);
-        const msg = err.response?.data?.message || 'Gagal membatalkan pesanan.';
-        showToast(msg, 'error');
-      }
+    setCancelConfirmation({ id, isPaid, msg: confirmMsg });
+  };
+
+  const handleCancelBooking = async (id) => {
+    try {
+      showToast('Memproses pembatalan...', 'info');
+      const res = await api.post(`/bookings/${id}/cancel`);
+      showToast(res.data.message || 'Pesanan berhasil dibatalkan.', 'success');
+      fetchBookings(currentPage);
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || 'Gagal membatalkan pesanan.';
+      showToast(msg, 'error');
     }
   };
 
@@ -459,7 +463,7 @@ const History = () => {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => handleCancelBooking(booking.id, false)}
+                        onClick={() => triggerCancelBooking(booking.id, false)}
                         className="bg-[#FF7B7B] hover:bg-[#E53E3E] text-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
                       >
                         ❌ Batal
@@ -505,7 +509,7 @@ const History = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => handleCancelBooking(booking.id, true)}
+                      onClick={() => triggerCancelBooking(booking.id, true)}
                       className="bg-[#FF7B7B] hover:bg-[#E53E3E] text-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
                     >
                       ❌ Batalkan Pesanan & Refund
@@ -606,6 +610,50 @@ const History = () => {
             >
               {submitting ? <><span className="neo-spinner mr-2"></span>Mengirim...</> : 'Kirim Review ⭐'}
             </button>
+          </div>
+        </div>
+      )}
+      {/* Neo-Brutalist Confirmation Modal */}
+      {cancelConfirmation && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#FFE353] border-4 border-neo-dark rounded-2xl p-6 shadow-[8px_8px_0_0_#1E1E1E] max-w-md w-full relative animate-scale-in text-neo-dark">
+            <button 
+              onClick={() => setCancelConfirmation(null)} 
+              className="absolute right-4 top-4 bg-white border-2 border-neo-dark p-1 rounded-full hover:bg-[#FF7B7B] hover:text-white transition-colors cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+            
+            <div className="flex items-start gap-4 mt-2 mb-6">
+              <div className="w-12 h-12 bg-[#FF7B7B] rounded-xl border-3 border-neo-dark flex items-center justify-center font-black text-2xl shrink-0 shadow-[2px_2px_0_0_#1E1E1E]">
+                ⚠️
+              </div>
+              <div>
+                <h3 className="text-xl font-black mb-1 leading-tight">Konfirmasi Pembatalan</h3>
+                <p className="text-sm font-bold text-gray-700 leading-relaxed">
+                  {cancelConfirmation.msg}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end mt-4">
+              <button
+                onClick={() => setCancelConfirmation(null)}
+                className="bg-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+              >
+                Kembali
+              </button>
+              <button
+                onClick={async () => {
+                  const { id } = cancelConfirmation;
+                  setCancelConfirmation(null);
+                  await handleCancelBooking(id);
+                }}
+                className="bg-[#FF7B7B] hover:bg-[#E53E3E] text-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+              >
+                Batalkan Pesanan
+              </button>
+            </div>
           </div>
         </div>
       )}
