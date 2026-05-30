@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { CalendarDays, Cat, StickyNote, CreditCard, Sparkles } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
+import api from '../../api/axios';
 
 const BookingModal = ({ 
   isOpen, 
@@ -13,6 +15,41 @@ const BookingModal = ({
   nights, 
   totalPrice 
 }) => {
+  const [cats, setCats] = useState([]);
+  const [loadingCats, setLoadingCats] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchCats = async () => {
+        setLoadingCats(true);
+        try {
+          const res = await api.get('/cats');
+          setCats(res.data);
+        } catch (error) {
+          console.error('Error fetching cats for booking:', error);
+        } finally {
+          setLoadingCats(false);
+        }
+      };
+      fetchCats();
+    }
+  }, [isOpen]);
+
+  const handleCatToggle = (catId) => {
+    const currentSelected = bookingForm.cat_ids || [];
+    let updated;
+    if (currentSelected.includes(catId)) {
+      updated = currentSelected.filter(id => id !== catId);
+    } else {
+      updated = [...currentSelected, catId];
+    }
+    setBookingForm({
+      ...bookingForm,
+      cat_ids: updated,
+      total_cats: updated.length
+    });
+  };
+
   if (!selectedRoom) return null;
 
   return (
@@ -56,26 +93,45 @@ const BookingModal = ({
           </div>
         </div>
 
-        {/* Total Cats */}
+        {/* Pilih Kucing spesifik */}
         <div>
           <label className="flex items-center gap-1.5 text-xs font-black uppercase mb-1.5 text-gray-600">
-            <Cat size={12} /> Jumlah Kucing
+            <Cat size={12} /> Pilih Kucing Anda (Bisa lebih dari 1)
           </label>
-          <div className="flex items-center gap-2">
-            <button 
-              type="button" 
-              onClick={() => setBookingForm({...bookingForm, total_cats: Math.max(1, bookingForm.total_cats - 1)})}
-              className="w-10 h-10 bg-neo-bg border-3 border-neo-dark rounded-lg font-black text-lg hover:bg-neo-yellow transition-colors flex items-center justify-center shadow-[2px_2px_0_0_#1E1E1E] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-            >−</button>
-            <div className="flex-1 bg-neo-bg border-3 border-neo-dark rounded-lg p-2.5 font-black text-center text-lg">
-              {bookingForm.total_cats}
+          {loadingCats ? (
+            <div className="bg-neo-bg border-3 border-neo-dark rounded-lg p-3 text-center text-sm font-bold neo-skeleton">
+              Memuat kucing...
             </div>
-            <button 
-              type="button" 
-              onClick={() => setBookingForm({...bookingForm, total_cats: Math.min(5, Number(bookingForm.total_cats) + 1)})}
-              className="w-10 h-10 bg-neo-bg border-3 border-neo-dark rounded-lg font-black text-lg hover:bg-neo-yellow transition-colors flex items-center justify-center shadow-[2px_2px_0_0_#1E1E1E] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-            >+</button>
-          </div>
+          ) : cats.length === 0 ? (
+            <div className="bg-red-100 border-3 border-red-400 text-red-700 rounded-lg p-3 text-center text-sm font-bold">
+              Belum ada kucing terdaftar. Silakan tambah kucing di halaman profil terlebih dahulu.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto p-1.5 border-3 border-neo-dark rounded-lg bg-neo-bg">
+              {cats.map(cat => {
+                const isSelected = (bookingForm.cat_ids || []).includes(cat.id);
+                return (
+                  <div
+                    key={cat.id}
+                    onClick={() => handleCatToggle(cat.id)}
+                    className={`flex items-center gap-3 p-2 rounded-lg border-2 border-neo-dark cursor-pointer transition-all ${
+                      isSelected ? 'bg-[#4ADE80] shadow-[2px_2px_0_0_#1E1E1E]' : 'bg-white hover:bg-neo-bg'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}} // toggled via parent div click
+                      className="w-4 h-4 border-2 border-neo-dark accent-neo-dark"
+                    />
+                    <div className="text-xs font-black">
+                      <p>{cat.name} <span className="text-gray-500 font-bold">({cat.breed})</span></p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Notes */}

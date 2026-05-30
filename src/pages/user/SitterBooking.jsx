@@ -19,13 +19,13 @@ const SitterBooking = () => {
   const [packages, setPackages] = useState([]);
   const [packageType, setPackageType] = useState('');
   const [form, setForm] = useState({
-    cat_id: '',
+    cat_ids: [],
     sitter_id: '',
     start_date: '',
     end_date: '',
     visit_time: 'pagi',
     notes: '',
-    cat_count: 1,
+    cat_count: 0,
   });
 
   const [adminFee, setAdminFee] = useState(5000);
@@ -38,8 +38,13 @@ const SitterBooking = () => {
       try {
         const cRes = await api.get('/cats');
         setCats(cRes.data);
-        if (cRes.data.length > 0) setForm(f => ({ ...f, cat_id: String(cRes.data[0].id) }));
-
+        if (cRes.data.length > 0) {
+          setForm(f => ({ 
+            ...f, 
+            cat_ids: [cRes.data[0].id],
+            cat_count: 1
+          }));
+        }
 
         const pRes = await api.get('/sitter-packages');
         setPackages(pRes.data);
@@ -95,16 +100,31 @@ const SitterBooking = () => {
     return diff > 0 ? diff : 0;
   };
 
+  const handleCatToggle = (catId) => {
+    const currentSelected = form.cat_ids || [];
+    let updated;
+    if (currentSelected.includes(catId)) {
+      updated = currentSelected.filter(id => id !== catId);
+    } else {
+      updated = [...currentSelected, catId];
+    }
+    setForm({
+      ...form,
+      cat_ids: updated,
+      cat_count: updated.length
+    });
+  };
+
   const days = calcDays();
   const subtotal = packagePrice * days * (form.cat_count || 1);
   const total = subtotal + adminFee;
 
-  const selectedCat = cats.find(c => String(c.id) === String(form.cat_id));
+  const selectedCats = cats.filter(c => form.cat_ids.includes(c.id));
   const selectedSitter = sitters.find(s => String(s.id) === String(form.sitter_id));
 
   const handleSubmit = async () => {
-    if (!form.cat_id || !form.sitter_id || !form.start_date || !form.end_date) {
-      showToast('Mohon lengkapi semua data pemesanan.', 'warning');
+    if (!form.cat_ids || form.cat_ids.length === 0 || !form.sitter_id || !form.start_date || !form.end_date) {
+      showToast('Mohon lengkapi semua data pemesanan (termasuk memilih kucing).', 'warning');
       return;
     }
     if (days <= 0) {
@@ -117,17 +137,19 @@ const SitterBooking = () => {
     }
     setSaving(true);
     try {
+      const catNamesString = selectedCats.map(c => `${c.name} (${c.breed})`).join(', ');
+      
       const res = await api.post('/bookings', {
         booking_type: 'sitter',
         sitter_package: packageType,
         sitter_id: Number(form.sitter_id),
         check_in: form.start_date,
         check_out: form.end_date,
-        total_cats: form.cat_count || 1,
+        cat_ids: form.cat_ids,
         visit_time: selectedPackage?.name?.includes('2x') ? 'both' : (form.visit_time === 'pagi' ? 'morning' : 'afternoon'),
-        notes: `[SITTER] Paket: ${selectedPackage?.name} | Kucing: ${selectedCat?.name} (${selectedCat?.breed}) | Waktu: ${selectedPackage?.name?.includes('2x') ? 'Pagi & Sore' : (form.visit_time === 'pagi' ? 'Pagi (08-11)' : 'Sore (15-18)')} | Sitter: ${selectedSitter?.name} | Alamat: ${user?.address} | ${form.notes}`,
+        notes: `[SITTER] Paket: ${selectedPackage?.name} | Kucing: ${catNamesString} | Waktu: ${selectedPackage?.name?.includes('2x') ? 'Pagi & Sore' : (form.visit_time === 'pagi' ? 'Pagi (08-11)' : 'Sore (15-18)')} | Sitter: ${selectedSitter?.name} | Alamat: ${user?.address} | ${form.notes}`,
       });
-      showToast(`Pesanan sitter ${selectedSitter?.name} untuk ${selectedCat?.name} berhasil! 🐾`, 'success');
+      showToast(`Pesanan sitter ${selectedSitter?.name} berhasil dibuat! 🐾`, 'success');
 
       if (res.data.snap_token) {
         const snap = await loadSnapScript();
@@ -302,21 +324,42 @@ const SitterBooking = () => {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black uppercase mb-2">Pilih Kucing</label>
-                  <select value={form.cat_id} onChange={e => setForm({...form, cat_id: e.target.value})} className="w-full bg-white border-4 border-neo-dark rounded-lg p-3 font-bold focus:outline-none focus:ring-4 focus:ring-neo-pink">
-                    {cats.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name} ({cat.breed})</option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-black uppercase mb-2">Pilih Kucing Anda (Bisa lebih dari 1)</label>
+                  <div className="grid grid-cols-1 gap-2 max-h-36 overflow-y-auto p-1.5 border-3 border-neo-dark rounded-lg bg-white">
+                    {cats.map(cat => {
+                      const isSelected = (form.cat_ids || []).includes(cat.id);
+                      return (
+                        <div
+                          key={cat.id}
+                          onClick={() => handleCatToggle(cat.id)}
+                          className={`flex items-center gap-3 p-2 rounded-lg border-2 border-neo-dark cursor-pointer transition-all ${
+                            isSelected ? 'bg-[#4ADE80] shadow-[2px_2px_0_0_#1E1E1E]' : 'bg-white hover:bg-neo-bg'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}} // toggled via click on parent
+                            className="w-4 h-4 border-2 border-neo-dark accent-neo-dark"
+                          />
+                          <div className="text-xs font-black">
+                            <p>{cat.name} <span className="text-gray-500 font-bold">({cat.breed})</span></p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {selectedCat && (
-                  <div className="bg-white/30 border-2 border-dashed border-white rounded-lg p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#FFD2A5] rounded-full border-2 border-neo-dark flex items-center justify-center font-black shrink-0">{selectedCat.name.charAt(0)}</div>
-                    <div className="text-sm">
-                      <p className="font-black">{selectedCat.name}</p>
-                      <p className="font-bold opacity-80">{selectedCat.breed} • {selectedCat.age} bln • {selectedCat.weight}kg</p>
-                    </div>
+                {selectedCats.length > 0 && (
+                  <div className="bg-white/30 border-2 border-dashed border-white rounded-lg p-3 space-y-2">
+                    <p className="text-xs font-black uppercase">Kucing yang terpilih ({selectedCats.length}):</p>
+                    {selectedCats.map(cat => (
+                      <div key={cat.id} className="flex items-center gap-3 bg-white/50 border-2 border-neo-dark rounded-md p-1.5 text-xs font-bold">
+                        <div className="w-6 h-6 bg-[#FFD2A5] rounded-full border-2 border-neo-dark flex items-center justify-center font-black shrink-0">{cat.name.charAt(0)}</div>
+                        <div>{cat.name} ({cat.breed})</div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -367,11 +410,6 @@ const SitterBooking = () => {
                     </select>
                   </div>
                 )}
-
-                <div>
-                  <label className="block text-xs font-black uppercase mb-1">Jumlah Kucing</label>
-                  <input type="number" min="1" value={form.cat_count} onChange={e => setForm({...form, cat_count: parseInt(e.target.value)})} className="w-full bg-white border-4 border-neo-dark rounded-lg p-3 font-bold focus:outline-none focus:ring-4 focus:ring-neo-pink" />
-                </div>
 
                 <div>
                   <label className="block text-xs font-black uppercase mb-1">Catatan Khusus</label>

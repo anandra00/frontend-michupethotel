@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
-import { Star, MapPin, Trash2, X, FileText, Camera, AlertTriangle } from 'lucide-react';
+import { Star, MapPin, Trash2, X, FileText, Camera, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useToast } from '../../components/Toast';
+import ChatDrawer from '../../components/ChatDrawer';
 
 const STATUS_MAP = {
   pending: { label: 'Pending', bg: 'bg-neo-yellow' },
@@ -22,6 +23,7 @@ const Reservations = () => {
   const [checkoutConfirmModal, setCheckoutConfirmModal] = useState(null);
   const [sitters, setSitters] = useState([]);
   const [selectedNewSitter, setSelectedNewSitter] = useState('');
+  const [selectedChatBooking, setSelectedChatBooking] = useState(null);
   
   // Daily Report State
   const [reportModal, setReportModal] = useState(null); // stores the booking
@@ -302,8 +304,12 @@ const Reservations = () => {
                     <p className="font-bold text-sm">{formatDate(booking.check_in)} - {formatDate(booking.check_out)}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-black uppercase text-gray-500 mb-1">Total Cats</p>
-                    <p className="font-bold text-sm">{booking.total_cats} ekor</p>
+                    <p className="text-xs font-black uppercase text-gray-500 mb-1">Kucing</p>
+                    <p className="font-bold text-xs truncate">
+                      {booking.cats && booking.cats.length > 0 
+                        ? booking.cats.map(c => c.name).join(', ') 
+                        : `${booking.total_cats} ekor`}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs font-black uppercase text-gray-500 mb-1">Total Price</p>
@@ -384,6 +390,13 @@ const Reservations = () => {
                       <FileText size={16} /> Buat Laporan Harian
                     </button>
                   )}
+                  <button 
+                    onClick={() => setSelectedChatBooking(booking)}
+                    className="bg-[#A2D2FF] border-4 border-neo-dark rounded-full px-4 py-2 font-black hover:bg-[#60A5FA] transition-all shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none flex items-center justify-center cursor-pointer"
+                    title="Tanya Kabar / Chat"
+                  >
+                    <MessageCircle size={16} />
+                  </button>
                   <button onClick={() => setDeleteId(booking.id)} className="bg-white border-4 border-neo-dark rounded-full px-4 py-2 font-black hover:bg-red-100 transition-colors">
                     🗑
                   </button>
@@ -580,6 +593,12 @@ const Reservations = () => {
             </form>
           </div>
         </div>
+      )}
+      {selectedChatBooking && (
+        <ChatDrawer 
+          booking={selectedChatBooking} 
+          onClose={() => setSelectedChatBooking(null)} 
+        />
       )}
     </DashboardLayout>
   );

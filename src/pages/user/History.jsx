@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
-import { Star, X, MapPin } from 'lucide-react';
+import { Star, X, MapPin, MessageCircle } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { loadSnapScript } from '../../utils/snap';
+import ChatDrawer from '../../components/ChatDrawer';
 
 const STATUS_MAP = {
   pending: { label: 'Menunggu', bg: 'bg-neo-yellow' },
@@ -20,6 +21,7 @@ const History = () => {
   const [reviewModal, setReviewModal] = useState(null); // booking object
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [selectedChatBooking, setSelectedChatBooking] = useState(null);
   const { showToast } = useToast();
 
   const fetchBookings = async () => {
@@ -140,13 +142,25 @@ const History = () => {
                       {isSitter ? `Cat Sitter — Paket ${booking.sitter_package || 'Kunjungan'}` : `Cat Boarding — ${booking.room?.name || 'Kamar'}`}
                     </p>
                     <h3 className="font-black text-xl md:text-2xl">{isSitter ? 'Sitter Visit' : (booking.room?.type || 'Standard')}</h3>
-                    <p className="text-sm font-bold text-gray-500 mt-0.5">{booking.total_cats} ekor • Rp {Number(booking.total_price).toLocaleString('id-ID')}</p>
+                    {booking.cats && booking.cats.length > 0 ? (
+                      <p className="text-sm font-bold text-gray-500 mt-0.5">
+                        Kucing: <span className="text-neo-pink font-black">{booking.cats.map(c => c.name).join(', ')}</span> • Rp {Number(booking.total_price).toLocaleString('id-ID')}
+                      </p>
+                    ) : (
+                      <p className="text-sm font-bold text-gray-500 mt-0.5">{booking.total_cats} ekor • Rp {Number(booking.total_price).toLocaleString('id-ID')}</p>
+                    )}
                   </div>
                   <div className="flex flex-col items-start sm:items-end gap-1.5">
                     <span className={`${st.bg} border-2 border-neo-dark px-4 py-1 rounded-full font-black text-xs shadow-[2px_2px_0_0_#1E1E1E]`}>
                       {st.label}
                     </span>
                     <p className="font-bold text-gray-500 text-xs">{formatDate(booking.check_in)} — {formatDate(booking.check_out)}</p>
+                    <button
+                      onClick={() => setSelectedChatBooking(booking)}
+                      className="mt-1 flex items-center gap-1 bg-[#A2D2FF] hover:bg-[#60A5FA] border-2 border-neo-dark px-2.5 py-1 rounded-lg font-black text-[10px] shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+                    >
+                      <MessageCircle size={11} className="shrink-0" /> Tanya Kabar
+                    </button>
                   </div>
                 </div>
 
@@ -280,6 +294,12 @@ const History = () => {
             </button>
           </div>
         </div>
+      )}
+      {selectedChatBooking && (
+        <ChatDrawer 
+          booking={selectedChatBooking} 
+          onClose={() => setSelectedChatBooking(null)} 
+        />
       )}
     </DashboardLayout>
   );

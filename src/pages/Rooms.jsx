@@ -20,7 +20,8 @@ const Rooms = () => {
   const [bookingForm, setBookingForm] = useState({
     check_in: '',
     check_out: '',
-    total_cats: 1,
+    total_cats: 0,
+    cat_ids: [],
     notes: ''
   });
 
@@ -44,7 +45,7 @@ const Rooms = () => {
       return;
     }
     setSelectedRoom(room);
-    setBookingForm({ check_in: '', check_out: '', total_cats: 1, notes: '' });
+    setBookingForm({ check_in: '', check_out: '', total_cats: 0, cat_ids: [], notes: '' });
     setShowBooking(true);
   };
 
@@ -54,6 +55,10 @@ const Rooms = () => {
       showToast('Check-out harus setelah check-in.', 'error');
       return;
     }
+    if (!bookingForm.cat_ids || bookingForm.cat_ids.length === 0) {
+      showToast('Harap pilih minimal satu kucing.', 'warning');
+      return;
+    }
     setSaving(true);
     try {
       const res = await api.post('/bookings', {
@@ -61,7 +66,7 @@ const Rooms = () => {
         room_id: selectedRoom.id,
         check_in: bookingForm.check_in,
         check_out: bookingForm.check_out,
-        total_cats: Number(bookingForm.total_cats),
+        cat_ids: bookingForm.cat_ids,
         notes: bookingForm.notes || null,
       });
 
