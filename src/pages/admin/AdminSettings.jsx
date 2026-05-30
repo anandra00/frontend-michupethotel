@@ -16,6 +16,7 @@ const AdminSettings = () => {
     notify_booking: true,
     notify_checkout: true,
     notify_new_user: false,
+    gps_checkin_radius: 500,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -131,6 +132,10 @@ const AdminSettings = () => {
             <div>
               <label className="block text-xs font-black uppercase mb-1">Admin Fee (Rp)</label>
               <input type="number" value={settings.admin_fee} onChange={e => setSettings({...settings, admin_fee: e.target.value})} className="w-full bg-neo-bg border-4 border-neo-dark rounded-lg p-3 font-bold" />
+            </div>
+            <div>
+              <label className="block text-xs font-black uppercase mb-1">GPS Check-in Radius (meters)</label>
+              <input type="number" value={settings.gps_checkin_radius} onChange={e => setSettings({...settings, gps_checkin_radius: e.target.value})} className="w-full bg-neo-bg border-4 border-neo-dark rounded-lg p-3 font-bold" />
             </div>
           </div>
         </div>

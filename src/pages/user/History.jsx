@@ -23,11 +23,21 @@ const History = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedChatBooking, setSelectedChatBooking] = useState(null);
   const { showToast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (page = 1) => {
     try {
-      const res = await api.get('/bookings');
-      setBookings(Array.isArray(res.data) ? res.data : (res.data.data || []));
+      const res = await api.get(`/bookings?page=${page}`);
+      if (Array.isArray(res.data)) {
+        setBookings(res.data);
+        setCurrentPage(1);
+        setLastPage(1);
+      } else {
+        setBookings(res.data.data || []);
+        setCurrentPage(res.data.current_page || 1);
+        setLastPage(res.data.last_page || 1);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,7 +46,7 @@ const History = () => {
   };
 
   // eslint-disable-next-line
-  useEffect(() => { fetchBookings(); }, []);
+  useEffect(() => { fetchBookings(1); }, []);
 
   const formatDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -54,7 +64,7 @@ const History = () => {
       await api.post(`/bookings/${reviewModal.id}/review`, reviewForm);
       showToast(`Review untuk ${reviewModal.sitter?.name} berhasil dikirim! ⭐`, 'success');
       setReviewModal(null);
-      fetchBookings();
+      fetchBookings(currentPage);
     } catch (err) {
       console.error(err);
       const msg = err.response?.data?.message || 'Gagal mengirim review.';
@@ -78,7 +88,7 @@ const History = () => {
       onSuccess: async function () {
         // Payment status will be updated by Midtrans webhook callback (server-to-server)
         showToast('Pembayaran berhasil! 🎉', 'success');
-        fetchBookings();
+        fetchBookings(currentPage);
       },
       onPending: function () {
         showToast('Menunggu pembayaran Anda.', 'success');
@@ -101,7 +111,7 @@ const History = () => {
       try {
         const res = await api.post(`/bookings/${id}/cancel`);
         showToast(res.data.message || 'Pesanan berhasil dibatalkan.', 'success');
-        fetchBookings();
+        fetchBookings(currentPage);
       } catch (err) {
         console.error(err);
         const msg = err.response?.data?.message || 'Gagal membatalkan pesanan.';
@@ -124,7 +134,7 @@ const History = () => {
             longitude: position.coords.longitude,
           });
           showToast(res.data.message || 'Check-in sitter berhasil diverifikasi!', 'success');
-          fetchBookings();
+          fetchBookings(currentPage);
         } catch (err) {
           console.error(err);
           const msg = err.response?.data?.message || 'Gagal melakukan check-in GPS.';
@@ -326,6 +336,29 @@ const History = () => {
               </div>
             );
           })}
+
+          {/* Pagination Controls */}
+          {lastPage > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8 bg-white border-4 border-neo-dark p-4 rounded-xl shadow-[4px_4px_0_0_#1E1E1E]">
+              <button
+                disabled={currentPage <= 1}
+                onClick={() => fetchBookings(currentPage - 1)}
+                className="px-4 py-2 border-3 border-neo-dark rounded-lg font-black text-xs bg-neo-yellow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none shadow-[2px_2px_0_0_#1E1E1E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Sebelumnya
+              </button>
+              <span className="font-black text-sm">
+                Halaman {currentPage} dari {lastPage}
+              </span>
+              <button
+                disabled={currentPage >= lastPage}
+                onClick={() => fetchBookings(currentPage + 1)}
+                className="px-4 py-2 border-3 border-neo-dark rounded-lg font-black text-xs bg-neo-yellow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none shadow-[2px_2px_0_0_#1E1E1E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Berikutnya
+              </button>
+            </div>
+          )}
         </div>
       )}
 

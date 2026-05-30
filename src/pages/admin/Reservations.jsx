@@ -33,11 +33,24 @@ const Reservations = () => {
 
   const { showToast } = useToast();
 
-  const fetchBookings = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+
+  const fetchBookings = async (page = 1) => {
     try {
-      const params = filter !== 'all' ? `?status=${filter}` : '';
-      const res = await api.get(`/bookings${params}`);
-      setBookings(Array.isArray(res.data) ? res.data : (res.data.data || []));
+      const statusParam = filter !== 'all' ? `status=${filter}` : '';
+      const pageParam = `page=${page}`;
+      const query = [statusParam, pageParam].filter(Boolean).join('&');
+      const res = await api.get(`/bookings?${query}`);
+      if (Array.isArray(res.data)) {
+        setBookings(res.data);
+        setCurrentPage(1);
+        setLastPage(1);
+      } else {
+        setBookings(res.data.data || []);
+        setCurrentPage(res.data.current_page || 1);
+        setLastPage(res.data.last_page || 1);
+      }
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {
@@ -48,8 +61,7 @@ const Reservations = () => {
    
    
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchBookings();
+    fetchBookings(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
@@ -69,7 +81,7 @@ const Reservations = () => {
     try {
       await api.put(`/bookings/${id}`, { status: newStatus });
       showToast(`Status berhasil diubah ke ${STATUS_MAP[newStatus]?.label || newStatus}`, 'success');
-      fetchBookings();
+      fetchBookings(currentPage);
     } catch (error) {
       console.error('Failed to update status:', error);
       showToast('Gagal mengubah status.', 'error');
@@ -109,7 +121,7 @@ const Reservations = () => {
       await api.delete(`/bookings/${id}`);
       setDeleteId(null);
       showToast('Reservasi berhasil dihapus.', 'success');
-      fetchBookings();
+      fetchBookings(currentPage);
     } catch (error) {
       console.error('Failed to delete:', error);
       showToast('Gagal menghapus reservasi.', 'error');
@@ -131,7 +143,7 @@ const Reservations = () => {
       showToast(`Sitter berhasil diganti ke ${newSitter?.name}`, 'success');
       setReassignModal(null);
       setSelectedNewSitter('');
-      fetchBookings();
+      fetchBookings(currentPage);
     } catch (error) {
       console.error('Failed to reassign:', error);
       showToast('Gagal mengganti sitter.', 'error');
@@ -444,6 +456,29 @@ const Reservations = () => {
               </div>
             );
           })}
+
+          {/* Pagination Controls */}
+          {lastPage > 1 && (
+            <div className="col-span-full flex justify-center items-center gap-4 mt-8 bg-white border-4 border-neo-dark p-4 rounded-xl shadow-[4px_4px_0_0_#1E1E1E]">
+              <button
+                disabled={currentPage <= 1}
+                onClick={() => fetchBookings(currentPage - 1)}
+                className="px-4 py-2 border-3 border-neo-dark rounded-lg font-black text-xs bg-neo-yellow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none shadow-[2px_2px_0_0_#1E1E1E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Sebelumnya
+              </button>
+              <span className="font-black text-sm">
+                Halaman {currentPage} dari {lastPage}
+              </span>
+              <button
+                disabled={currentPage >= lastPage}
+                onClick={() => fetchBookings(currentPage + 1)}
+                className="px-4 py-2 border-3 border-neo-dark rounded-lg font-black text-xs bg-neo-yellow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none shadow-[2px_2px_0_0_#1E1E1E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Berikutnya
+              </button>
+            </div>
+          )}
         </div>
       )}
 
