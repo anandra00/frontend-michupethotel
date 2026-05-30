@@ -85,7 +85,7 @@ const SitterBooking = () => {
     return is2x ? basePrice * 2 : basePrice;
   };
 
-  const selectedPackage = packages.find(p => String(p.id) === String(packageType));
+  const selectedPackage = (packages || []).find(p => String(p.id) === String(packageType));
   const packagePrice = getDynamicPricePerDay(selectedPackage, form.cat_count);
 
   useEffect(() => {
@@ -127,16 +127,17 @@ const SitterBooking = () => {
           url += `?check_in=${form.start_date}&check_out=${form.end_date}&visit_time=${visitTime}`;
         }
         const sRes = await api.get(url);
-        const activeSitters = sRes.data.filter(s => s.status === 'Active');
+        const rawData = Array.isArray(sRes.data) ? sRes.data : [];
+        const activeSitters = rawData.filter(s => s && s.status === 'Active');
         setSitters(activeSitters);
         
         // If current selected is not available, deselect
         if (form.sitter_id) {
-           const selected = activeSitters.find(s => String(s.id) === String(form.sitter_id));
+           const selected = activeSitters.find(s => s && String(s.id) === String(form.sitter_id));
            if (selected && !selected.is_available) {
                setForm(f => ({ ...f, sitter_id: '' }));
            }
-        } else if (activeSitters.length > 0 && activeSitters[0].is_available) {
+        } else if (activeSitters.length > 0 && activeSitters[0] && activeSitters[0].is_available) {
            setForm(f => ({ ...f, sitter_id: String(activeSitters[0].id) }));
         }
       } catch (err) {
@@ -182,8 +183,8 @@ const SitterBooking = () => {
 
   const total = form.cat_count > 0 ? Math.max(0, subtotal - discountAmount + adminFee) : 0;
 
-  const selectedCats = cats.filter(c => form.cat_ids.includes(c.id));
-  const selectedSitter = sitters.find(s => String(s.id) === String(form.sitter_id));
+  const selectedCats = (cats || []).filter(c => c && (form.cat_ids || []).includes(c.id));
+  const selectedSitter = (sitters || []).find(s => s && String(s.id) === String(form.sitter_id));
 
   const handleSubmit = async () => {
     if (!form.cat_ids || form.cat_ids.length === 0 || !form.sitter_id || !form.start_date || !form.end_date) {
