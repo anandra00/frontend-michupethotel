@@ -12,7 +12,7 @@ const NotificationWidget = ({ isOpen, onClose }) => {
   const fetchNotifications = async () => {
     try {
       const res = await api.get('/notifications');
-      setNotifications(res.data);
+      setNotifications(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) {
       console.error(err);
     } finally {

@@ -130,10 +130,15 @@ const SitterBooking = () => {
       showToast(`Pesanan sitter ${selectedSitter?.name} untuk ${selectedCat?.name} berhasil! 🐾`, 'success');
 
       if (res.data.snap_token) {
-        await loadSnapScript();
-        window.snap.pay(res.data.snap_token, {
+        const snap = await loadSnapScript();
+        if (!snap) {
+          showToast('Gagal memuat modul pembayaran. Silakan coba lagi dari menu Riwayat.', 'error');
+          navigate('/dashboard/history');
+          return;
+        }
+        snap.pay(res.data.snap_token, {
           onSuccess: async function() {
-            await api.put(`/bookings/${res.data.id}/pay-success`);
+            // Payment status will be updated by Midtrans webhook callback (server-to-server)
             showToast('Pembayaran Sitter berhasil!', 'success');
             navigate('/dashboard/history');
           },

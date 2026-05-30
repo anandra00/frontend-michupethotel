@@ -22,7 +22,8 @@ const DashboardLayout = ({ children }) => {
     const fetchUnread = async () => {
       try {
         const res = await api.get('/notifications');
-        setUnreadCount(res.data.filter(n => !n.read_at).length);
+        const data = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        setUnreadCount(data.filter(n => !n.read_at).length);
       } catch (e) {
         console.error(e);
       }

@@ -20,7 +20,7 @@ const DailyReport = () => {
 
         if (found) {
           const reportsRes = await api.get(`/cats/${found.id}/daily-reports`);
-          setActivities(reportsRes.data);
+          setActivities(Array.isArray(reportsRes.data) ? reportsRes.data : (reportsRes.data.data || []));
         }
       } catch (err) {
         console.error(err);

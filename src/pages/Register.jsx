@@ -83,6 +83,9 @@ const Register = () => {
               required
               minLength={8}
             />
+            <p className="text-xs font-bold text-gray-500 mt-1">
+              * Minimal 8 karakter, harus mengandung huruf besar, huruf kecil, angka, dan simbol.
+            </p>
           </div>
 
           <button type="submit" disabled={loading} className="neo-btn neo-btn-secondary w-full text-xl py-4 mt-6 disabled:opacity-60 disabled:cursor-wait">

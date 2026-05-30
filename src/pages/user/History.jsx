@@ -25,7 +25,7 @@ const History = () => {
   const fetchBookings = async () => {
     try {
       const res = await api.get('/bookings');
-      setBookings(res.data);
+      setBookings(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -67,10 +67,14 @@ const History = () => {
       showToast('Token pembayaran tidak ditemukan.', 'error');
       return;
     }
-    await loadSnapScript();
-    window.snap.pay(booking.snap_token, {
+    const snap = await loadSnapScript();
+    if (!snap) {
+      showToast('Gagal memuat modul pembayaran. Cek koneksi Anda.', 'error');
+      return;
+    }
+    snap.pay(booking.snap_token, {
       onSuccess: async function () {
-        await api.put(`/bookings/${booking.id}/pay-success`);
+        // Payment status will be updated by Midtrans webhook callback (server-to-server)
         showToast('Pembayaran berhasil! 🎉', 'success');
         fetchBookings();
       },

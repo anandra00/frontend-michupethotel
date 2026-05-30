@@ -35,7 +35,7 @@ const Reservations = () => {
     try {
       const params = filter !== 'all' ? `?status=${filter}` : '';
       const res = await api.get(`/bookings${params}`);
-      setBookings(res.data);
+      setBookings(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {

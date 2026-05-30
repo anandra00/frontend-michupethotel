@@ -20,6 +20,7 @@ const Profile = lazy(() => import('./pages/user/Profile'));
 const DailyReport = lazy(() => import('./pages/user/DailyReport'));
 const Rooms = lazy(() => import('./pages/Rooms'));
 const Services = lazy(() => import('./pages/Services'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 import { useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -59,6 +60,9 @@ function AnimatedRoutes() {
           <Route path="/admin/sitters" element={<ProtectedRoute requireAdmin><PageTransition><AdminSitters /></PageTransition></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><PageTransition><AdminReports /></PageTransition></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><PageTransition><AdminSettings /></PageTransition></ProtectedRoute>} />
+          
+          {/* Catch-All 404 Route */}
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
     </Suspense>
