@@ -5,7 +5,7 @@ export const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:80
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   timeout: 15000, // 15s timeout
-  withCredentials: true, // Re-enabling for Sanctum compatibility
+  withCredentials: false, // Using Bearer tokens only for cross-domain stability
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
