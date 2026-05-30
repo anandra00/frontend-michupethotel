@@ -110,20 +110,9 @@ const NotificationWidget = ({ isOpen, onClose }) => {
         {loading ? (
           <div className="p-8 text-center text-sm font-bold text-neo-dark">Loading...</div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center flex flex-col items-center gap-4">
+          <div className="p-8 text-center flex flex-col items-center gap-2">
             <Bell className="w-8 h-8 text-neo-dark opacity-50" />
-            <div>
-              <p className="font-bold text-neo-dark">Belum ada notifikasi</p>
-              {user?.role === 'admin' && <p className="text-xs text-gray-500 mt-1">Uji coba fitur notifikasi real-time di bawah ini:</p>}
-            </div>
-            {user?.role === 'admin' && (
-              <button
-                onClick={handleSendTestNotif}
-                className="bg-neo-pink text-white font-bold px-4 py-2 rounded-full border-3 border-neo-dark shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-xs"
-              >
-                Kirim Notifikasi Uji Coba 🔔
-              </button>
-            )}
+            <p className="font-bold text-neo-dark">Belum ada notifikasi</p>
           </div>
         ) : (
           <div className="flex flex-col">
@@ -165,6 +154,17 @@ const NotificationWidget = ({ isOpen, onClose }) => {
           </div>
         )}
       </div>
+
+      {user?.role === 'admin' && (
+        <div className="bg-gray-50 p-4 border-t-4 border-neo-dark flex justify-center shrink-0">
+          <button
+            onClick={handleSendTestNotif}
+            className="w-full bg-neo-pink text-white font-bold py-2.5 rounded-lg border-3 border-neo-dark shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-xs flex items-center justify-center gap-1.5"
+          >
+            <Bell size={12} /> Kirim Notifikasi Uji Coba 🔔
+          </button>
+        </div>
+      )}
     </div>
   );
 };
