@@ -7,12 +7,37 @@ import { loadSnapScript } from '../../utils/snap';
 import ChatDrawer from '../../components/ChatDrawer';
 
 const STATUS_MAP = {
-  pending: { label: 'Menunggu', bg: 'bg-neo-yellow' },
-  approved: { label: 'Dikonfirmasi', bg: 'bg-[#4ADE80]' },
-  checked_in: { label: 'Sedang Berjalan', bg: 'bg-[#60A5FA] text-white' },
-  checked_out: { label: 'Selesai', bg: 'bg-[#B983FF] text-white' },
-  cancelled: { label: 'Dibatalkan', bg: 'bg-red-400 text-white' },
-  rejected: { label: 'Ditolak', bg: 'bg-red-500 text-white' },
+  pending: { label: 'Menunggu', bg: 'bg-[#FFDE4D]' },
+  approved: { label: 'Disetujui', bg: 'bg-[#55EC8C]' },
+  checked_in: { label: 'Sedang Berjalan', bg: 'bg-[#5CBDF9] text-neo-dark' },
+  checked_out: { label: 'Selesai', bg: 'bg-[#C28CFF] text-neo-dark' },
+  cancelled: { label: 'Dibatalkan', bg: 'bg-[#FF7B7B] text-white' },
+  rejected: { label: 'Ditolak', bg: 'bg-[#E53E3E] text-white' },
+};
+
+const parseBookingNotes = (notesStr) => {
+  if (!notesStr) return null;
+  if (notesStr.startsWith('[SITTER]')) {
+    const cleanStr = notesStr.replace('[SITTER] ', '');
+    const parts = cleanStr.split(' | ');
+    const details = {};
+    let customNotes = '';
+
+    parts.forEach(part => {
+      const colonIndex = part.indexOf(':');
+      if (colonIndex !== -1) {
+        const label = part.slice(0, colonIndex).trim().toLowerCase();
+        const value = part.slice(colonIndex + 1).trim();
+        details[label] = value;
+      } else {
+        if (part.trim() && part !== 'none' && part !== 'null') {
+          customNotes = part.trim();
+        }
+      }
+    });
+    return { type: 'sitter', details, customNotes };
+  }
+  return { type: 'custom', customNotes: notesStr };
 };
 
 const History = () => {
@@ -197,7 +222,7 @@ const History = () => {
             
             // If the booking is still pending (not approved by Admin yet) but the payment is paid
             if (booking.status === 'pending' && booking.payment_status === 'paid') {
-              st = { label: 'Menunggu Konfirmasi', bg: 'bg-[#4ADE80]' }; // green but different label
+              st = { label: 'Menunggu Konfirmasi', bg: 'bg-[#55EC8C]' }; // green but different label
             }
 
             const isSitter = isSitterBooking(booking);
@@ -205,94 +230,190 @@ const History = () => {
             const hasReview = isSitter && booking.sitter_review;
 
             return (
-              <div key={booking.id} className="bg-white border-4 border-neo-dark rounded-xl p-4 md:p-6 shadow-[4px_4px_0_0_#1E1E1E] transition-transform hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#1E1E1E]">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">
-                      {isSitter ? `Cat Sitter — Paket ${booking.sitter_package || 'Kunjungan'}` : `Cat Boarding — ${booking.room?.name || 'Kamar'}`}
-                    </p>
-                    <h3 className="font-black text-xl md:text-2xl">{isSitter ? 'Sitter Visit' : (booking.room?.type || 'Standard')}</h3>
-                    {booking.cats && booking.cats.length > 0 ? (
-                      <p className="text-sm font-bold text-gray-500 mt-0.5">
-                        Kucing: <span className="text-neo-pink font-black">{booking.cats.map(c => c.name).join(', ')}</span> • Rp {Number(booking.total_price).toLocaleString('id-ID')}
-                      </p>
-                    ) : (
-                      <p className="text-sm font-bold text-gray-500 mt-0.5">{booking.total_cats} ekor • Rp {Number(booking.total_price).toLocaleString('id-ID')}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-start sm:items-end gap-1.5">
-                    <div className="flex gap-1.5 items-center">
+              <div key={booking.id} className="bg-white border-4 border-neo-dark rounded-xl p-5 md:p-6 shadow-[6px_6px_0_0_#1E1E1E] transition-all hover:-translate-y-1 hover:shadow-[8px_8px_0_0_#1E1E1E] relative overflow-hidden">
+                {/* Visual Accent Strip based on status */}
+                <div className={`absolute top-0 left-0 right-0 h-2.5 ${st.bg.split(' ')[0]}`} />
+                
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4 mt-2">
+                  <div className="flex-grow min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="text-[10px] font-black bg-neo-bg border-2 border-neo-dark text-gray-500 px-2 py-0.5 rounded-md uppercase">
+                        {isSitter ? '🐱 CAT SITTER' : '🏨 CAT BOARDING'}
+                      </span>
                       {booking.coupon && (
-                        <span className="bg-[#FDE047] border-2 border-neo-dark px-2.5 py-0.5 rounded-md font-black text-[10px]">
-                          PROMO
+                        <span className="bg-[#FFE353] border-2 border-neo-dark px-2 py-0.5 rounded-md font-black text-[9px] shadow-[1px_1px_0_0_#1E1E1E]">
+                          🎁 PROMO
                         </span>
                       )}
-                      <span className={`${st.bg} border-2 border-neo-dark px-4 py-1 rounded-full font-black text-xs shadow-[2px_2px_0_0_#1E1E1E]`}>
-                        {st.label}
+                    </div>
+                    
+                    <h3 className="font-black text-xl md:text-2xl text-neo-dark tracking-tight mb-1">
+                      {isSitter ? `Sitter Visit` : `Boarding: ${booking.room?.name || 'Kamar'}`}
+                    </h3>
+                    
+                    <p className="font-bold text-gray-500 text-xs flex items-center gap-1 mb-2">
+                      📅 {formatDate(booking.check_in)} — {formatDate(booking.check_out)}
+                    </p>
+
+                    {/* Cats rendering */}
+                    {booking.cats && booking.cats.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {booking.cats.map(cat => (
+                          <span key={cat.id} className="bg-[#FFF0F5] border-2 border-neo-dark px-2.5 py-1 rounded-md font-black text-xs text-neo-pink shadow-[2px_2px_0_0_#1E1E1E]">
+                            🐱 {cat.name} <span className="text-gray-400 font-bold">({cat.breed || 'Campuran'})</span>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="bg-[#FFF0F5] border-2 border-neo-dark px-2.5 py-1 rounded-md font-black text-xs text-neo-pink shadow-[2px_2px_0_0_#1E1E1E]">
+                        🐱 {booking.total_cats} Ekor Anabul
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-row md:flex-col items-start md:items-end justify-between md:justify-start gap-3 shrink-0">
+                    <span className={`${st.bg} border-3 border-neo-dark px-4 py-1.5 rounded-full font-black text-xs shadow-[3px_3px_0_0_#1E1E1E]`}>
+                      {st.label}
+                    </span>
+                    
+                    <div className="text-left md:text-right">
+                      <span className="text-[10px] font-black text-gray-400 uppercase block leading-none mb-1">Total Biaya</span>
+                      <span className="font-black text-xl md:text-2xl text-neo-dark block">
+                        Rp {Number(booking.total_price).toLocaleString('id-ID')}
                       </span>
                     </div>
-                    <p className="font-bold text-gray-500 text-xs">{formatDate(booking.check_in)} — {formatDate(booking.check_out)}</p>
-                    <button
-                      onClick={() => setSelectedChatBooking(booking)}
-                      className="mt-1 flex items-center gap-1 bg-[#A2D2FF] hover:bg-[#60A5FA] border-2 border-neo-dark px-2.5 py-1 rounded-lg font-black text-[10px] shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
-                    >
-                      <MessageCircle size={11} className="shrink-0" /> Tanya Kabar
-                    </button>
                   </div>
                 </div>
 
-                {/* Sitter Info */}
+                {/* Sitter / Room info cards */}
                 {isSitter && booking.sitter && (
-                  <div className="bg-[#F3E8FF] border-3 border-neo-dark rounded-lg p-3 flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-[#B983FF] rounded-full border-2 border-neo-dark overflow-hidden shrink-0">
-                      <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${booking.sitter.name}`} alt="" className="w-full h-full" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-sm">Sitter: {booking.sitter.name}</p>
-                      <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                        <span className="flex items-center gap-0.5"><Star size={11} className="text-yellow-500 fill-yellow-500" /> {booking.sitter.avg_rating || booking.sitter.rating}</span>
-                        <span className="flex items-center gap-0.5"><MapPin size={11} /> {booking.sitter.area}</span>
+                  <div className="bg-[#F5EFFF] border-3 border-neo-dark rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shadow-[3px_3px_0_0_#1E1E1E] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 bg-[#DDBBFF] rounded-full border-2 border-neo-dark overflow-hidden shrink-0 shadow-[2px_2px_0_0_#1E1E1E]">
+                        <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${booking.sitter.name}`} alt="" className="w-full h-full" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-black text-sm text-neo-dark truncate">Sitter: {booking.sitter.name}</span>
+                          <span className="bg-[#B983FF] text-white border-2 border-neo-dark text-[9px] font-black px-1.5 py-0.25 rounded shrink-0">MITRA</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                          <span className="flex items-center gap-0.5"><Star size={12} className="text-yellow-500 fill-yellow-500" /> {booking.sitter.avg_rating || booking.sitter.rating}</span>
+                          <span className="flex items-center gap-0.5"><MapPin size={12} /> {booking.sitter.area}</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Review Button */}
-                    {canReview && (
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                       <button
-                        onClick={() => openReviewModal(booking)}
-                        className="shrink-0 bg-neo-yellow border-3 border-neo-dark rounded-lg px-3 py-1.5 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1"
+                        onClick={() => setSelectedChatBooking(booking)}
+                        className="bg-[#A2D2FF] hover:bg-[#60A5FA] border-3 border-neo-dark px-3 py-2 rounded-xl font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer flex items-center gap-1.5"
                       >
-                        <Star size={12} /> Review
+                        <MessageCircle size={13} className="shrink-0" /> Chat Sitter
                       </button>
-                    )}
 
-                    {/* Already Reviewed */}
-                    {hasReview && (
-                      <div className="shrink-0 flex items-center gap-1 bg-[#4ADE80] border-2 border-neo-dark rounded-full px-3 py-1 text-xs font-black">
-                        {[...Array(booking.sitter_review.rating)].map((_, i) => (
-                          <Star key={i} size={10} className="text-yellow-600 fill-yellow-600" />
-                        ))}
-                      </div>
-                    )}
+                      {canReview && (
+                        <button
+                          onClick={() => openReviewModal(booking)}
+                          className="bg-neo-yellow border-3 border-neo-dark rounded-xl px-3 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Star size={13} /> Review
+                        </button>
+                      )}
+
+                      {hasReview && (
+                        <div className="flex items-center gap-0.5 bg-[#55EC8C] border-3 border-neo-dark rounded-full px-3 py-1.5 text-xs font-black shadow-[2px_2px_0_0_#1E1E1E]">
+                          {[...Array(booking.sitter_review.rating)].map((_, i) => (
+                            <Star key={i} size={11} className="text-yellow-600 fill-yellow-600" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {/* Notes */}
-                {booking.notes && (
-                  <p className="text-xs text-gray-400 italic border-l-4 border-neo-yellow pl-2">{booking.notes}</p>
+                {!isSitter && booking.room && (
+                  <div className="bg-[#FFF4E0] border-3 border-neo-dark rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shadow-[3px_3px_0_0_#1E1E1E] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 bg-[#FFC55A] rounded-full border-2 border-neo-dark overflow-hidden shrink-0 flex items-center justify-center font-black text-xl shadow-[2px_2px_0_0_#1E1E1E]">
+                        🏨
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-black text-sm text-neo-dark">Kamar: {booking.room.name}</span>
+                          <span className="bg-[#FF9F1C] text-white border-2 border-neo-dark text-[9px] font-black px-1.5 py-0.25 rounded uppercase shrink-0">{booking.room.type}</span>
+                        </div>
+                        <p className="text-xs font-bold text-gray-500 truncate">{booking.room.description || 'Layanan rawat inap kucing premium dengan AC dan sterilisasi berkala.'}</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 self-end sm:self-auto">
+                      <button
+                        onClick={() => setSelectedChatBooking(booking)}
+                        className="bg-[#A2D2FF] hover:bg-[#60A5FA] border-3 border-neo-dark px-3 py-2 rounded-xl font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <MessageCircle size={13} className="shrink-0" /> Chat Admin
+                      </button>
+                    </div>
+                  </div>
                 )}
+
+                {/* Dynamic Styled Notes & Details Grid */}
+                {(() => {
+                  const notesData = parseBookingNotes(booking.notes);
+                  if (!notesData) return null;
+
+                  if (notesData.type === 'sitter') {
+                    const { details, customNotes } = notesData;
+                    return (
+                      <div className="bg-[#FAF8F5] border-3 border-neo-dark rounded-xl p-4 mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-3 shadow-[2px_2px_0_0_#1E1E1E]">
+                        {details.paket && (
+                          <div>
+                            <span className="font-black uppercase text-[10px] text-gray-400 block mb-0.5">📦 Layanan Paket</span>
+                            <span className="font-bold text-gray-800">{details.paket}</span>
+                          </div>
+                        )}
+                        {details.waktu && (
+                          <div>
+                            <span className="font-black uppercase text-[10px] text-gray-400 block mb-0.5">⏰ Jadwal Shift</span>
+                            <span className="font-bold text-gray-800 uppercase">{details.waktu}</span>
+                          </div>
+                        )}
+                        {details.alamat && (
+                          <div className="sm:col-span-2">
+                            <span className="font-black uppercase text-[10px] text-gray-400 block mb-0.5">📍 Alamat Kunjungan</span>
+                            <span className="font-bold text-gray-800">{details.alamat}</span>
+                          </div>
+                        )}
+                        {customNotes && (
+                          <div className="sm:col-span-2 bg-[#FEF08A] border-2 border-neo-dark p-2.5 rounded-lg mt-1">
+                            <span className="font-black uppercase text-[9px] text-neo-dark block mb-0.5">📝 Catatan Khusus Kamu</span>
+                            <span className="font-bold text-neo-dark italic">"{customNotes}"</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="bg-[#FAF8F5] border-3 border-neo-dark p-3.5 rounded-xl mt-3 mb-3 shadow-[2px_2px_0_0_#1E1E1E]">
+                      <span className="font-black uppercase text-[10px] text-gray-400 block mb-1">📝 Catatan Pemesan</span>
+                      <p className="font-bold text-xs text-gray-700 italic">"{notesData.customNotes}"</p>
+                    </div>
+                  );
+                })()}
 
                 {/* Show review comment if exists */}
                 {hasReview && booking.sitter_review?.comment && (
-                  <div className="mt-2 bg-neo-bg border-2 border-dashed border-gray-300 rounded-lg p-2 text-xs font-bold text-gray-500 italic">
+                  <div className="mt-2 bg-neo-bg border-2 border-dashed border-gray-300 rounded-lg p-2.5 text-xs font-bold text-gray-500 italic">
                     "{booking.sitter_review.comment}"
                   </div>
                 )}
 
                 {/* GPS Check-in verification details */}
                 {isSitter && booking.checkin_distance_m !== null && (
-                  <div className="mt-2.5 bg-neo-bg border-2 border-neo-dark rounded-lg p-2.5 text-xs font-bold text-neo-dark flex justify-between items-center">
-                    <span>Lokasi Check-in Sitter:</span>
-                    <span className={booking.checkin_verified ? "text-green-700 font-black uppercase" : "text-red-600 font-black uppercase"}>
+                  <div className="mt-3 bg-neo-bg border-3 border-neo-dark rounded-xl p-3 text-xs font-black text-neo-dark flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-[2px_2px_0_0_#1E1E1E]">
+                    <span className="flex items-center gap-1.5">📍 LOKASI CHECK-IN SITTER:</span>
+                    <span className={`px-3 py-1 border-2 border-neo-dark rounded-full font-black text-xs uppercase shadow-[1px_1px_0_0_#1E1E1E] ${booking.checkin_verified ? "bg-[#DCFCE7] text-green-700" : "bg-[#FFE4E6] text-red-600"}`}>
                       {booking.checkin_verified ? `✅ Terverifikasi (${booking.checkin_distance_m}m)` : `❌ Di luar radius (${booking.checkin_distance_m}m)`}
                     </span>
                   </div>
@@ -300,9 +421,9 @@ const History = () => {
 
                 {/* Refund status details */}
                 {booking.refund_status && (
-                  <div className="mt-2.5 bg-red-50 border-2 border-dashed border-red-300 rounded-lg p-2.5 text-xs font-bold text-red-700 flex justify-between items-center">
-                    <span>Status Refund Midtrans:</span>
-                    <span className="font-black uppercase">
+                  <div className="mt-3 bg-[#FFF5F5] border-3 border-neo-dark border-dashed rounded-xl p-3 text-xs font-black text-red-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-[2px_2px_0_0_#1E1E1E]">
+                    <span className="flex items-center gap-1.5">⏳ STATUS REFUND MIDTRANS:</span>
+                    <span className="bg-[#FFE4E6] border-2 border-neo-dark px-3 py-1 rounded-full text-xs font-black uppercase shadow-[1px_1px_0_0_#1E1E1E]">
                       {booking.refund_status === 'pending' && '⏳ Diproses (Pending)'}
                       {booking.refund_status === 'processed' && '✅ Selesai (Refunded)'}
                       {booking.refund_status === 'failed' && '❌ Gagal / Tidak Memenuhi Syarat'}
@@ -315,7 +436,7 @@ const History = () => {
                   <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300">
                     <button
                       onClick={() => handleSitterCheckin(booking.id)}
-                      className="bg-neo-yellow text-neo-dark border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                      className="bg-[#FFDE4D] text-neo-dark border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
                     >
                       📍 Verifikasi Sitter Check-in (GPS)
                     </button>
@@ -324,16 +445,18 @@ const History = () => {
 
                 {/* Pay/Cancel Buttons for unpaid pending bookings */}
                 {booking.status === 'pending' && booking.payment_status !== 'paid' && (
-                  <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <p className="text-xs font-bold text-red-500 flex items-center gap-1">
-                      ⚠️ Belum Dibayar
-                    </p>
-                    <div className="flex gap-2">
+                  <div className="mt-4 pt-4 border-t-3 border-neo-dark flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-[#FFE4E6] border-3 border-neo-dark text-[#FF4A4A] px-3.5 py-1.5 rounded-full font-black text-xs uppercase shadow-[2px_2px_0_0_#1E1E1E] animate-pulse">
+                        🔴 Belum Dibayar
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handleCancelBooking(booking.id, false)}
-                        className="bg-red-400 text-white border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+                        className="bg-[#FF7B7B] hover:bg-[#E53E3E] text-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
                       >
-                        Batal
+                        ❌ Batal
                       </button>
                       {booking.midtrans_order_id && (
                         <button
@@ -352,14 +475,14 @@ const History = () => {
                               showToast('Gagal memverifikasi status pembayaran.', 'error');
                             }
                           }}
-                          className="bg-neo-yellow border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                          className="bg-[#FFDE4D] hover:bg-[#FCE100] text-neo-dark border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1 cursor-pointer"
                         >
                           🔄 Cek Status
                         </button>
                       )}
                       <button
                         onClick={() => handlePayNow(booking)}
-                        className="bg-[#4ADE80] border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                        className="bg-[#22C55E] hover:bg-[#16A34A] text-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         💳 Bayar Sekarang
                       </button>
@@ -369,16 +492,30 @@ const History = () => {
 
                 {/* Cancel button for PAID bookings (cancellable) */}
                 {booking.payment_status === 'paid' && (booking.status === 'pending' || booking.status === 'approved') && (
-                  <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <p className="text-xs font-bold text-gray-500">
-                      Kebijakan Refund: H-2 pembatalan
-                    </p>
+                  <div className="mt-4 pt-4 border-t-3 border-neo-dark flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-[#DCFCE7] border-3 border-neo-dark text-[#16A34A] px-3.5 py-1.5 rounded-full font-black text-xs uppercase shadow-[2px_2px_0_0_#1E1E1E]">
+                        🟢 Sudah Lunas (Paid)
+                      </span>
+                    </div>
                     <button
                       onClick={() => handleCancelBooking(booking.id, true)}
-                      className="bg-red-400 text-white border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+                      className="bg-[#FF7B7B] hover:bg-[#E53E3E] text-white border-3 border-neo-dark rounded-xl px-4 py-2 font-black text-xs shadow-[3px_3px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
                     >
-                      Batalkan Pesanan & Refund
+                      ❌ Batalkan Pesanan & Refund
                     </button>
+                  </div>
+                )}
+
+                {/* Status indicator for finished bookings */}
+                {booking.payment_status === 'paid' && !['pending', 'approved'].includes(booking.status) && (
+                  <div className="mt-4 pt-4 border-t-3 border-neo-dark flex justify-between items-center">
+                    <span className="bg-[#DCFCE7] border-3 border-neo-dark text-[#16A34A] px-3.5 py-1.5 rounded-full font-black text-xs uppercase shadow-[2px_2px_0_0_#1E1E1E]">
+                      🟢 Sudah Lunas (Paid)
+                    </span>
+                    <span className="text-xs font-bold text-gray-400">
+                      Transaksi Selesai & Terverifikasi
+                    </span>
                   </div>
                 )}
               </div>
