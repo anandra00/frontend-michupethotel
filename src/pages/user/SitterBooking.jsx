@@ -116,8 +116,8 @@ const SitterBooking = () => {
   };
 
   const days = calcDays();
-  const subtotal = packagePrice * days * (form.cat_count || 1);
-  const total = subtotal + adminFee;
+  const subtotal = packagePrice * days * form.cat_count;
+  const total = form.cat_count > 0 ? (subtotal + adminFee) : 0;
 
   const selectedCats = cats.filter(c => form.cat_ids.includes(c.id));
   const selectedSitter = sitters.find(s => String(s.id) === String(form.sitter_id));
