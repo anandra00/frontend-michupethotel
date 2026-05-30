@@ -46,7 +46,33 @@ const History = () => {
   };
 
   // eslint-disable-next-line
-  useEffect(() => { fetchBookings(1); }, []);
+  useEffect(() => {
+    const checkRedirectPayment = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get('order_id');
+
+      if (orderId) {
+        const parts = orderId.split('-');
+        if (parts.length >= 2) {
+          const bookingId = parts[1];
+          showToast('Memverifikasi status pembayaran Anda...', 'info');
+          try {
+            await api.post(`/bookings/${bookingId}/verify-payment`);
+            showToast('Pembayaran berhasil diverifikasi! 🎉', 'success');
+            // Clean up the URL query parameters so they don't trigger again on page refreshes
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (err) {
+            console.error(err);
+            showToast('Pemeriksaan status pembayaran selesai.', 'info');
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      }
+      fetchBookings(1);
+    };
+
+    checkRedirectPayment();
+  }, []);
 
   const formatDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -309,6 +335,28 @@ const History = () => {
                       >
                         Batal
                       </button>
+                      {booking.midtrans_order_id && (
+                        <button
+                          onClick={async () => {
+                            showToast('Memeriksa status pembayaran...', 'info');
+                            try {
+                              const res = await api.post(`/bookings/${booking.id}/verify-payment`);
+                              if (res.data.booking?.payment_status === 'paid') {
+                                showToast('Status terverifikasi: Lunas! 🎉', 'success');
+                              } else {
+                                showToast(`Status Midtrans: ${res.data.midtrans_status || 'Belum Lunas'}`, 'warning');
+                              }
+                              fetchBookings(currentPage);
+                            } catch (err) {
+                              console.error(err);
+                              showToast('Gagal memverifikasi status pembayaran.', 'error');
+                            }
+                          }}
+                          className="bg-neo-yellow border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          🔄 Cek Status
+                        </button>
+                      )}
                       <button
                         onClick={() => handlePayNow(booking)}
                         className="bg-[#4ADE80] border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1 cursor-pointer"
