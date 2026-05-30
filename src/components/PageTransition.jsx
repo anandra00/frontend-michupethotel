@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 const pageVariants = {
   initial: {
@@ -18,19 +18,27 @@ const pageVariants = {
   }
 };
 
+const reducedVariants = {
+  initial: { opacity: 0 },
+  in: { opacity: 1 },
+  out: { opacity: 0 }
+};
+
 const pageTransition = {
-  type: 'spring',
-  stiffness: 260,
-  damping: 20
+  type: 'tween',
+  ease: 'easeInOut',
+  duration: 0.2 // Faster duration for snappier UX
 };
 
 const PageTransition = ({ children }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.div
       initial="initial"
       animate="in"
       exit="out"
-      variants={pageVariants}
+      variants={shouldReduceMotion ? reducedVariants : pageVariants}
       transition={pageTransition}
       className="w-full h-full"
     >
