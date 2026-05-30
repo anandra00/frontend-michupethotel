@@ -164,7 +164,7 @@ const DashboardLayout = ({ children }) => {
                   <HelpCircle size={16} />
                 </button>
                 <Link 
-                  to={isAdmin ? '/admin' : '/dashboard/profile'} 
+                  to="/dashboard/profile" 
                   className="bg-neo-pink text-white font-bold px-3 md:px-4 py-1.5 md:py-2 rounded-full border-3 md:border-4 border-neo-dark shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center gap-1.5 text-sm md:text-base"
                 >
                   <User size={14} />

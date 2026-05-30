@@ -192,7 +192,9 @@ const Profile = () => {
                  <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.name || 'User'}`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <h2 className="text-2xl font-black text-center">{user?.name}</h2>
-              <p className="font-bold text-sm bg-white px-3 py-1 rounded-full border-2 border-neo-dark mt-2">Cat Owner</p>
+              <p className="font-bold text-sm bg-white px-3 py-1 rounded-full border-2 border-neo-dark mt-2">
+                {user?.role === 'admin' ? 'Administrator' : 'Cat Owner'}
+              </p>
            </div>
            
            <div className="space-y-4 bg-white p-4 rounded-lg border-4 border-neo-dark">
