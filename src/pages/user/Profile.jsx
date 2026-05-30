@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../api/axios';
-import { Plus, X, Rabbit, Edit, Trash2, Save, User } from 'lucide-react';
+import { Plus, X, Rabbit, Edit, Trash2, Save, User, Bell } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 
 const EMPTY_CAT = { name: '', breed: '', age: '', weight: '', gender: 'male', notes: '', photo: null };
@@ -177,6 +177,17 @@ const Profile = () => {
     );
   };
 
+  const handleSendTestNotif = async () => {
+    try {
+      showToast('Mengirim notifikasi uji coba... 🔔', 'info');
+      const res = await api.post('/notifications/test');
+      showToast(res.data.message || 'Notifikasi uji coba berhasil dikirim!', 'success');
+    } catch (error) {
+      console.error('Failed to send test notification', error);
+      showToast('Gagal mengirim notifikasi uji coba.', 'error');
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-8">
@@ -225,6 +236,12 @@ const Profile = () => {
                 className="w-full flex items-center justify-center gap-2 bg-neo-yellow border-4 border-neo-dark rounded-lg py-2 font-black shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all mt-4"
               >
                 <Edit size={16} /> Edit Profile
+              </button>
+              <button
+                onClick={handleSendTestNotif}
+                className="w-full flex items-center justify-center gap-2 bg-neo-pink text-white border-4 border-neo-dark rounded-lg py-2 font-black shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all mt-2"
+              >
+                <Bell size={16} /> Test Notification
               </button>
            </div>
         </div>
