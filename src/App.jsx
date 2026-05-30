@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy-load subpages to reduce initial bundle size dramatically
 const Login = lazy(() => import('./pages/Login'));
@@ -74,33 +75,35 @@ function AnimatedRoutes() {
 function App() {
   return (
     <Router>
-      <Toaster 
-        position="top-center"
-        toastOptions={{
-          className: 'border-4 border-neo-dark rounded-xl shadow-[4px_4px_0_0_#1E1E1E] font-fredoka font-bold text-neo-dark',
-          style: {
-            background: '#FFF8E7',
-            color: '#1E1E1E',
-            padding: '16px 24px',
-          },
-          success: {
+      <ErrorBoundary>
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            className: 'border-4 border-neo-dark rounded-xl shadow-[4px_4px_0_0_#1E1E1E] font-fredoka font-bold text-neo-dark',
             style: {
-              background: '#A2D2FF', // neo-blue
+              background: '#FFF8E7',
+              color: '#1E1E1E',
+              padding: '16px 24px',
             },
-          },
-          error: {
-            style: {
-              background: '#FFB5C6', // neo-pink
+            success: {
+              style: {
+                background: '#A2D2FF', // neo-blue
+              },
             },
-          },
-        }}
-      />
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <AnimatedRoutes />
-        </main>
-      </div>
+            error: {
+              style: {
+                background: '#FFB5C6', // neo-pink
+              },
+            },
+          }}
+        />
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow">
+            <AnimatedRoutes />
+          </main>
+        </div>
+      </ErrorBoundary>
     </Router>
   );
 }
