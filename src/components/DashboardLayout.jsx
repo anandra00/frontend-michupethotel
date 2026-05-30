@@ -155,13 +155,15 @@ const DashboardLayout = ({ children }) => {
             </div>
             <div className="flex items-center gap-2 md:gap-3 ml-auto">
                 <button onClick={() => setNotifOpen(!notifOpen)} className="relative w-8 h-8 md:w-10 md:h-10 rounded-full border-3 md:border-4 border-neo-dark flex items-center justify-center bg-white hover:bg-neo-yellow transition-colors shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none">
-                  <Bell size={16} />
+                  <Bell className="w-[18px] h-[18px] md:w-[22px] md:h-[22px] text-neo-dark" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-neo-red border-2 border-neo-dark rounded-full"></span>
+                    <span className="absolute -top-1.5 -right-1.5 bg-neo-red text-white text-[9px] md:text-[10px] font-black border-2 border-neo-dark rounded-full w-[18px] h-[18px] md:w-[20px] md:h-[20px] flex items-center justify-center shadow-[1px_1px_0_0_#1E1E1E]">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
                   )}
                 </button>
                 <button onClick={() => setFaqOpen(!faqOpen)} className="w-8 h-8 md:w-10 md:h-10 rounded-full border-3 md:border-4 border-neo-dark flex items-center justify-center bg-white hover:bg-neo-pink transition-colors shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none">
-                  <HelpCircle size={16} />
+                  <HelpCircle className="w-[18px] h-[18px] md:w-[22px] md:h-[22px] text-neo-dark" />
                 </button>
                 <Link 
                   to="/dashboard/profile" 
