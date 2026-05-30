@@ -30,8 +30,26 @@ const SitterBooking = () => {
 
   const [adminFee, setAdminFee] = useState(5000);
   
+  const getDynamicPricePerDay = (pkg, catCount) => {
+    if (!pkg) return 0;
+    const is2x = pkg.name?.includes('2x');
+    
+    // Tiered pricing:
+    // 1-2 cats: 60k for 1x, 120k for 2x
+    // 3-4 cats: 80k for 1x, 160k for 2x
+    // 5+ cats: 120k for 1x, 240k for 2x
+    let basePrice = 60000;
+    if (catCount >= 3 && catCount <= 4) {
+      basePrice = 80000;
+    } else if (catCount >= 5) {
+      basePrice = 120000;
+    }
+    
+    return is2x ? basePrice * 2 : basePrice;
+  };
+
   const selectedPackage = packages.find(p => String(p.id) === String(packageType));
-  const packagePrice = selectedPackage ? Number(selectedPackage.price) : 0;
+  const packagePrice = getDynamicPricePerDay(selectedPackage, form.cat_count);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,7 +134,7 @@ const SitterBooking = () => {
   };
 
   const days = calcDays();
-  const subtotal = packagePrice * days * form.cat_count;
+  const subtotal = packagePrice * days;
   const total = form.cat_count > 0 ? (subtotal + adminFee) : 0;
 
   const selectedCats = cats.filter(c => form.cat_ids.includes(c.id));
@@ -226,17 +244,20 @@ const SitterBooking = () => {
             <div>
               <h2 className="text-xl md:text-2xl font-black mb-4">Pilih Paket Kunjungan</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                {packages.map(pkg => (
-                  <div 
-                    key={pkg.id}
-                    onClick={() => setPackageType(String(pkg.id))}
-                    className={`cursor-pointer border-4 border-neo-dark rounded-xl p-4 md:p-6 transition-all shadow-[4px_4px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none ${String(packageType) === String(pkg.id) ? 'bg-[#4ADE80]' : 'bg-white'}`}
-                  >
-                    <h3 className="font-black text-xl md:text-2xl mb-2">{pkg.name}</h3>
-                    <p className="font-bold text-sm mb-4 md:mb-6 opacity-80">{pkg.description}</p>
-                    <p className="font-black text-2xl md:text-3xl">Rp {(Number(pkg.price)/1000)}k <span className="text-sm font-bold opacity-80">/hari</span></p>
-                  </div>
-                ))}
+                {packages.map(pkg => {
+                  const displayPrice = getDynamicPricePerDay(pkg, form.cat_count);
+                  return (
+                    <div 
+                      key={pkg.id}
+                      onClick={() => setPackageType(String(pkg.id))}
+                      className={`cursor-pointer border-4 border-neo-dark rounded-xl p-4 md:p-6 transition-all shadow-[4px_4px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none ${String(packageType) === String(pkg.id) ? 'bg-[#4ADE80]' : 'bg-white'}`}
+                    >
+                      <h3 className="font-black text-xl md:text-2xl mb-2">{pkg.name}</h3>
+                      <p className="font-bold text-sm mb-4 md:mb-6 opacity-80">{pkg.description}</p>
+                      <p className="font-black text-2xl md:text-3xl">Rp {(displayPrice/1000)}k <span className="text-sm font-bold opacity-80">/hari</span></p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
