@@ -148,6 +148,14 @@ const SitterBooking = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.start_date, form.end_date, form.visit_time]);
 
+  function calcDays() {
+    if (!form.start_date || !form.end_date) return 0;
+    const d1 = new Date(form.start_date);
+    const d2 = new Date(form.end_date);
+    const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : 0;
+  }
+
   const days = calcDays();
   const subtotal = packagePrice * days;
 
@@ -157,14 +165,6 @@ const SitterBooking = () => {
     setCouponError('');
     setIsExpired(false);
   }, [subtotal]);
-
-  const calcDays = () => {
-    if (!form.start_date || !form.end_date) return 0;
-    const d1 = new Date(form.start_date);
-    const d2 = new Date(form.end_date);
-    const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
-    return diff > 0 ? diff : 0;
-  };
 
   const handleCatToggle = (catId) => {
     const currentSelected = form.cat_ids || [];
