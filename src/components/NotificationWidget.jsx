@@ -2,12 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, Info, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useToast } from './Toast';
 
 const NotificationWidget = ({ isOpen, onClose }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const widgetRef = useRef(null);
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  const handleSendTestNotif = async () => {
+    try {
+      showToast('Mengirim notifikasi uji coba... 🔔', 'info');
+      const res = await api.post('/notifications/test');
+      showToast(res.data.message || 'Notifikasi uji coba berhasil dikirim!', 'success');
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to send test notification', error);
+      showToast('Gagal mengirim notifikasi uji coba.', 'error');
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -94,9 +108,18 @@ const NotificationWidget = ({ isOpen, onClose }) => {
         {loading ? (
           <div className="p-8 text-center text-sm font-bold text-neo-dark">Loading...</div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center flex flex-col items-center gap-2">
+          <div className="p-8 text-center flex flex-col items-center gap-4">
             <Bell className="w-8 h-8 text-neo-dark opacity-50" />
-            <p className="font-bold text-neo-dark">Belum ada notifikasi</p>
+            <div>
+              <p className="font-bold text-neo-dark">Belum ada notifikasi</p>
+              <p className="text-xs text-gray-500 mt-1">Uji coba fitur notifikasi real-time di bawah ini:</p>
+            </div>
+            <button
+              onClick={handleSendTestNotif}
+              className="bg-neo-pink text-white font-bold px-4 py-2 rounded-full border-3 border-neo-dark shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-xs"
+            >
+              Kirim Notifikasi Uji Coba 🔔
+            </button>
           </div>
         ) : (
           <div className="flex flex-col">
