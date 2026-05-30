@@ -7,6 +7,14 @@ import { Camera, Clock, CheckCircle2, UtensilsCrossed, AlertCircle, Star, MapPin
 import { useToast } from '../../components/Toast';
 import { loadSnapScript } from '../../utils/snap';
 
+const VISIT_TIME_MAP = {
+  pagi_awal: 'Pagi Awal (07:00 - 09:00)',
+  pagi_9_12: 'Pagi (09:00 - 12:00)',
+  siang_12_15: 'Siang (12:00 - 15:00)',
+  sore_15_18: 'Sore (15:00 - 18:00)',
+  malam_18_21: 'Malam (18:00 - 21:00)',
+};
+
 const SitterBooking = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -24,6 +32,8 @@ const SitterBooking = () => {
     start_date: '',
     end_date: '',
     visit_time: 'pagi',
+    visit_time_1: 'pagi_9_12',
+    visit_time_2: 'sore_15_18',
     notes: '',
     cat_count: 0,
   });
@@ -212,7 +222,11 @@ const SitterBooking = () => {
         cat_ids: form.cat_ids,
         coupon_code: appliedCoupon ? appliedCoupon.code : null,
         visit_time: selectedPackage?.name?.includes('2x') ? 'both' : (form.visit_time === 'pagi' ? 'morning' : 'afternoon'),
-        notes: `[SITTER] Paket: ${selectedPackage?.name} | Kucing: ${catNamesString} | Waktu: ${selectedPackage?.name?.includes('2x') ? 'Pagi & Sore' : (form.visit_time === 'pagi' ? 'Pagi (08-11)' : 'Sore (15-18)')} | Sitter: ${selectedSitter?.name} | Alamat: ${user?.address} | ${form.notes}`,
+        notes: `[SITTER] Paket: ${selectedPackage?.name} | Kucing: ${catNamesString} | Waktu: ${
+          selectedPackage?.name?.includes('2x') 
+            ? `2 Kunjungan (Visit 1: ${VISIT_TIME_MAP[form.visit_time_1 || 'pagi_9_12']} & Visit 2: ${VISIT_TIME_MAP[form.visit_time_2 || 'sore_15_18']})`
+            : (form.visit_time === 'pagi' ? 'Pagi (08:00 - 11:00)' : 'Sore (15:00 - 18:00)')
+        } | Sitter: ${selectedSitter?.name} | Alamat: ${user?.address} | ${form.notes}`,
       });
       showToast(`Pesanan sitter ${selectedSitter?.name} berhasil dibuat! 🐾`, 'success');
 
@@ -470,10 +484,34 @@ const SitterBooking = () => {
                 </div>
 
                 {selectedPackage?.name?.includes('2x') ? (
-                  <div className="bg-[#E0F2FE] border-3 border-neo-dark rounded-lg p-3 text-xs font-bold text-blue-900 shadow-[2px_2px_0_0_#1E1E1E]">
-                    <p className="font-black text-xs uppercase mb-1">📅 Jadwal Kunjungan (2x Sehari):</p>
-                    <p className="font-bold">• Kunjungan 1: <strong className="font-black">Pagi (08:00 - 11:00)</strong></p>
-                    <p className="font-bold">• Kunjungan 2: <strong className="font-black">Sore (15:00 - 18:00)</strong></p>
+                  <div className="bg-[#E0F2FE] border-4 border-neo-dark rounded-xl p-4 shadow-[2px_2px_0_0_#1E1E1E] space-y-3">
+                    <p className="font-black text-xs uppercase mb-1 text-blue-950">📅 Atur Jam Kunjungan (2x Sehari):</p>
+                    
+                    <div>
+                      <label className="block text-[10px] font-black uppercase mb-1 text-blue-900">Kunjungan 1 (Pagi/Siang)</label>
+                      <select 
+                        value={form.visit_time_1} 
+                        onChange={e => setForm({...form, visit_time_1: e.target.value})} 
+                        className="w-full bg-white border-3 border-neo-dark rounded-lg p-2 font-bold text-xs focus:outline-none focus:ring-3 focus:ring-neo-pink"
+                      >
+                        <option value="pagi_awal">Pagi Awal (07:00 - 09:00)</option>
+                        <option value="pagi_9_12">Pagi (09:00 - 12:00)</option>
+                        <option value="siang_12_15">Siang (12:00 - 15:00)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase mb-1 text-blue-900">Kunjungan 2 (Siang/Sore/Malam)</label>
+                      <select 
+                        value={form.visit_time_2} 
+                        onChange={e => setForm({...form, visit_time_2: e.target.value})} 
+                        className="w-full bg-white border-3 border-neo-dark rounded-lg p-2 font-bold text-xs focus:outline-none focus:ring-3 focus:ring-neo-pink"
+                      >
+                        <option value="siang_12_15">Siang (12:00 - 15:00)</option>
+                        <option value="sore_15_18">Sore (15:00 - 18:00)</option>
+                        <option value="malam_18_21">Malam (18:00 - 21:00)</option>
+                      </select>
+                    </div>
                   </div>
                 ) : (
                   <div>
