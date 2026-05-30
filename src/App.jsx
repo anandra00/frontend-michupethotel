@@ -14,6 +14,7 @@ const Reservations = lazy(() => import('./pages/admin/Reservations'));
 const AdminSitters = lazy(() => import('./pages/admin/AdminSitters'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const SitterBooking = lazy(() => import('./pages/user/SitterBooking'));
 const History = lazy(() => import('./pages/user/History'));
 const Profile = lazy(() => import('./pages/user/Profile'));
@@ -58,6 +59,7 @@ function AnimatedRoutes() {
           <Route path="/admin/rooms" element={<ProtectedRoute requireAdmin><PageTransition><ManageRooms /></PageTransition></ProtectedRoute>} />
           <Route path="/admin/reservations" element={<ProtectedRoute requireAdmin><PageTransition><Reservations /></PageTransition></ProtectedRoute>} />
           <Route path="/admin/sitters" element={<ProtectedRoute requireAdmin><PageTransition><AdminSitters /></PageTransition></ProtectedRoute>} />
+          <Route path="/admin/coupons" element={<ProtectedRoute requireAdmin><PageTransition><AdminCoupons /></PageTransition></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><PageTransition><AdminReports /></PageTransition></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><PageTransition><AdminSettings /></PageTransition></ProtectedRoute>} />
           

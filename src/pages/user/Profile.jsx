@@ -118,6 +118,8 @@ const Profile = () => {
       email: user?.email || '',
       phone: user?.phone || '',
       address: user?.address || '',
+      latitude: user?.latitude || '',
+      longitude: user?.longitude || '',
       password: '',
       password_confirmation: '',
     });
@@ -128,7 +130,14 @@ const Profile = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { name: profileForm.name, email: profileForm.email, phone: profileForm.phone, address: profileForm.address };
+      const payload = { 
+        name: profileForm.name, 
+        email: profileForm.email, 
+        phone: profileForm.phone, 
+        address: profileForm.address,
+        latitude: profileForm.latitude ? parseFloat(profileForm.latitude) : null,
+        longitude: profileForm.longitude ? parseFloat(profileForm.longitude) : null,
+      };
       if (profileForm.password) {
         payload.password = profileForm.password;
         payload.password_confirmation = profileForm.password_confirmation;
@@ -143,6 +152,29 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const getGPSLocation = () => {
+    if (!navigator.geolocation) {
+      showToast('Browser Anda tidak mendukung Geolocation.', 'error');
+      return;
+    }
+    showToast('Mendapatkan lokasi Anda...', 'info');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setProfileForm(prev => ({
+          ...prev,
+          latitude: position.coords.latitude.toFixed(7),
+          longitude: position.coords.longitude.toFixed(7)
+        }));
+        showToast('Lokasi GPS berhasil didapatkan! 📍', 'success');
+      },
+      (error) => {
+        console.error(error);
+        showToast('Gagal mendapatkan lokasi. Pastikan izin lokasi diaktifkan.', 'error');
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   return (
@@ -176,6 +208,16 @@ const Profile = () => {
                  <p className="text-xs font-black uppercase text-gray-500">Alamat</p>
                  <p className="font-bold text-sm">{user?.address || 'Belum diatur'}</p>
               </div>
+              <div>
+                  <p className="text-xs font-black uppercase text-gray-500">Koordinat GPS</p>
+                  <p className="font-bold text-sm">
+                    {user?.latitude && user?.longitude ? (
+                      <span className="text-green-700">📍 {user.latitude}, {user.longitude}</span>
+                    ) : (
+                      <span className="text-red-500 font-black">⚠️ Belum disimpan (Diperlukan untuk verifikasi Sitter)</span>
+                    )}
+                  </p>
+               </div>
               <button
                 onClick={openProfileEdit}
                 className="w-full flex items-center justify-center gap-2 bg-neo-yellow border-4 border-neo-dark rounded-lg py-2 font-black shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all mt-4"
@@ -339,6 +381,26 @@ const Profile = () => {
                   <div>
                      <label className="block text-xs font-black uppercase mb-1">Alamat Rumah</label>
                      <textarea rows="2" value={profileForm.address} onChange={e => setProfileForm({...profileForm, address: e.target.value})} className="w-full bg-white border-4 border-neo-dark rounded-lg p-2 font-bold focus:ring-4 focus:ring-neo-pink" placeholder="Jl. Contoh No. 123, Kelurahan, Kecamatan, Kota" />
+                  </div>
+                  <div className="bg-white/30 border-2 border-dashed border-white rounded-lg p-3">
+                     <p className="text-xs font-black uppercase mb-2">📍 Lokasi GPS (Latitude / Longitude)</p>
+                     <div className="grid grid-cols-2 gap-3 mb-2">
+                        <div>
+                           <label className="block text-[10px] font-black uppercase mb-1">Latitude</label>
+                           <input type="number" step="any" placeholder="-6.12345" value={profileForm.latitude} onChange={e => setProfileForm({...profileForm, latitude: e.target.value})} className="w-full bg-white border-2 border-neo-dark rounded-md p-1.5 font-bold text-xs" />
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-black uppercase mb-1">Longitude</label>
+                           <input type="number" step="any" placeholder="106.12345" value={profileForm.longitude} onChange={e => setProfileForm({...profileForm, longitude: e.target.value})} className="w-full bg-white border-2 border-neo-dark rounded-md p-1.5 font-bold text-xs" />
+                        </div>
+                     </div>
+                     <button
+                       type="button"
+                       onClick={getGPSLocation}
+                       className="w-full bg-neo-yellow border-2 border-neo-dark rounded-md py-1 font-black text-xs shadow-[1px_1px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all flex items-center justify-center gap-1"
+                     >
+                       Dapatkan Lokasi GPS Saya 📍
+                     </button>
                   </div>
                   <div className="border-t-4 border-dashed border-white/50 pt-4">
                      <p className="text-xs font-black uppercase mb-2 text-white/80">Ganti Password (kosongkan jika tidak ingin ganti)</p>

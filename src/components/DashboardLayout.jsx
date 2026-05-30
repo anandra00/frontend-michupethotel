@@ -7,7 +7,7 @@ import api from '../api/axios';
 import { 
   Home, CalendarDays, MapPin, User, Settings, LogOut,
   LayoutDashboard, CalendarHeart, Cat, Users, FileText,
-  Bell, HelpCircle, Menu, X
+  Bell, HelpCircle, Menu, X, Ticket
 } from 'lucide-react';
 
 const DashboardLayout = ({ children }) => {
@@ -56,6 +56,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'Reservations', path: '/admin/reservations', icon: <CalendarHeart size={20} /> },
     { name: 'Rooms', path: '/admin/rooms', icon: <Cat size={20} /> },
     { name: 'Sitters', path: '/admin/sitters', icon: <Users size={20} /> },
+    { name: 'Coupons', path: '/admin/coupons', icon: <Ticket size={20} /> },
     { name: 'Reports', path: '/admin/reports', icon: <FileText size={20} /> },
   ];
 

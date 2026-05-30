@@ -49,7 +49,7 @@ const Rooms = () => {
     setShowBooking(true);
   };
 
-  const handleBookingSubmit = async (e) => {
+  const handleBookingSubmit = async (e, couponCode) => {
     e.preventDefault();
     if (calcNights() <= 0) {
       showToast('Check-out harus setelah check-in.', 'error');
@@ -67,6 +67,7 @@ const Rooms = () => {
         check_in: bookingForm.check_in,
         check_out: bookingForm.check_out,
         cat_ids: bookingForm.cat_ids,
+        coupon_code: couponCode || null,
         notes: bookingForm.notes || null,
       });
 

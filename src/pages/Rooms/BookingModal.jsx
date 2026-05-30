@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { CalendarDays, Cat, StickyNote, CreditCard, Sparkles } from 'lucide-react';
+import { CalendarDays, Cat, StickyNote, CreditCard, Sparkles, X } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import api from '../../api/axios';
+import { useToast } from '../../components/Toast';
 
 const BookingModal = ({ 
   isOpen, 
@@ -17,6 +18,14 @@ const BookingModal = ({
 }) => {
   const [cats, setCats] = useState([]);
   const [loadingCats, setLoadingCats] = useState(false);
+  const { showToast } = useToast();
+
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -35,6 +44,36 @@ const BookingModal = ({
     }
   }, [isOpen]);
 
+  // Reset coupon when nights, selectedRoom, or modal opens/closes change
+  useEffect(() => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setCouponError('');
+    setCouponCode('');
+  }, [nights, selectedRoom, isOpen]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await api.post('/coupons/validate', {
+        code: couponCode,
+        subtotal: totalPrice
+      });
+      setAppliedCoupon(res.data);
+      setDiscountAmount(res.data.discount);
+      showToast('Kupon promo berhasil diterapkan! 🎉', 'success');
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || 'Kupon tidak valid.';
+      setCouponError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   const handleCatToggle = (catId) => {
     const currentSelected = bookingForm.cat_ids || [];
     let updated;
@@ -52,6 +91,8 @@ const BookingModal = ({
 
   if (!selectedRoom) return null;
 
+  const finalTotal = Math.max(0, totalPrice - discountAmount);
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -64,7 +105,7 @@ const BookingModal = ({
         <span className="font-bold text-sm opacity-70"> / malam</span>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={(e) => onSubmit(e, appliedCoupon ? appliedCoupon.code : null)} className="space-y-4">
         {/* Dates */}
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -151,6 +192,52 @@ const BookingModal = ({
         {/* Price Summary */}
         {nights > 0 && (
           <div className="bg-[#F3E8FF] border-3 border-neo-dark rounded-xl p-4">
+            {/* Coupon promo block */}
+            <div className="mb-4 bg-white/50 p-2.5 rounded-lg border-2 border-dashed border-neo-dark">
+              <label className="block text-[10px] font-black uppercase mb-1 text-gray-600">Punya Kode Kupon?</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="KODEPROMO"
+                  value={couponCode}
+                  onChange={e => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    setCouponError('');
+                  }}
+                  disabled={!!appliedCoupon}
+                  className="flex-1 bg-white border-2 border-neo-dark rounded-md px-2 py-1 font-bold uppercase disabled:bg-gray-100 disabled:opacity-75 text-xs text-neo-dark"
+                />
+                {appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedCoupon(null);
+                      setDiscountAmount(0);
+                      setCouponCode('');
+                    }}
+                    className="bg-[#EF4444] text-white border-2 border-neo-dark rounded-md px-2.5 py-1 font-black hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all shadow-[1px_1px_0_0_#1E1E1E] text-xs"
+                  >
+                    Hapus
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="bg-[#FDE047] border-2 border-neo-dark rounded-md px-2.5 py-1 font-black hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all shadow-[1px_1px_0_0_#1E1E1E] disabled:opacity-50 text-xs"
+                  >
+                    {couponLoading ? '...' : 'Terapkan'}
+                  </button>
+                )}
+              </div>
+              {couponError && <p className="text-red-600 text-[10px] font-black mt-1 bg-red-100/80 p-0.5 rounded border border-red-200">{couponError}</p>}
+              {appliedCoupon && (
+                <p className="text-green-800 text-[10px] font-black mt-1 bg-green-100/80 p-0.5 rounded border border-green-200">
+                  ✅ Kupon diterapkan: {appliedCoupon.description || `${appliedCoupon.code} digunakan`}
+                </p>
+              )}
+            </div>
+
             <div className="flex items-center gap-1.5 mb-3">
               <CreditCard size={14} />
               <span className="text-xs font-black uppercase">Ringkasan Biaya</span>
@@ -160,6 +247,12 @@ const BookingModal = ({
                 <span>{nights} malam × Rp {Number(selectedRoom.price_per_night).toLocaleString('id-ID')}</span>
                 <span>Rp {totalPrice.toLocaleString('id-ID')}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between font-bold text-sm text-green-800 bg-green-100/50 p-0.5 rounded">
+                  <span>Diskon Kupon</span>
+                  <span>-Rp {discountAmount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
               {bookingForm.total_cats > 1 && (
                 <div className="flex justify-between font-bold text-xs text-gray-500">
                   <span>Jumlah kucing</span>
@@ -169,7 +262,7 @@ const BookingModal = ({
             </div>
             <div className="flex justify-between font-black text-xl border-t-3 border-dashed border-neo-dark pt-3 mt-3">
               <span>Total</span>
-              <span className="text-[#7C3AED]">Rp {totalPrice.toLocaleString('id-ID')}</span>
+              <span className="text-[#7C3AED]">Rp {finalTotal.toLocaleString('id-ID')}</span>
             </div>
           </div>
         )}

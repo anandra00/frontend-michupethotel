@@ -92,17 +92,51 @@ const History = () => {
     });
   };
 
-  const handleCancelBooking = async (id) => {
-    if (window.confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')) {
+  const handleCancelBooking = async (id, isPaid = false) => {
+    let confirmMsg = 'Apakah Anda yakin ingin membatalkan pesanan ini?';
+    if (isPaid) {
+      confirmMsg = 'Apakah Anda yakin ingin membatalkan pesanan ini? Pembatalan lunas H-2 atau lebih sebelum check-in akan mendapatkan refund otomatis. Kurang dari H-2 tidak ada refund.';
+    }
+    if (window.confirm(confirmMsg)) {
       try {
-        await api.delete(`/bookings/${id}`);
-        showToast('Pesanan berhasil dibatalkan.', 'success');
+        const res = await api.post(`/bookings/${id}/cancel`);
+        showToast(res.data.message || 'Pesanan berhasil dibatalkan.', 'success');
         fetchBookings();
       } catch (err) {
         console.error(err);
-        showToast('Gagal membatalkan pesanan.', 'error');
+        const msg = err.response?.data?.message || 'Gagal membatalkan pesanan.';
+        showToast(msg, 'error');
       }
     }
+  };
+
+  const handleSitterCheckin = (bookingId) => {
+    if (!navigator.geolocation) {
+      showToast('Browser Anda tidak mendukung Geolocation.', 'error');
+      return;
+    }
+    showToast('Mendapatkan lokasi Anda untuk verifikasi...', 'info');
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await api.post(`/bookings/${bookingId}/sitter-checkin`, {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          showToast(res.data.message || 'Check-in sitter berhasil diverifikasi!', 'success');
+          fetchBookings();
+        } catch (err) {
+          console.error(err);
+          const msg = err.response?.data?.message || 'Gagal melakukan check-in GPS.';
+          showToast(msg, 'error');
+        }
+      },
+      (error) => {
+        console.error(error);
+        showToast('Gagal mengakses GPS. Pastikan izin lokasi diaktifkan.', 'error');
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   return (
@@ -151,9 +185,16 @@ const History = () => {
                     )}
                   </div>
                   <div className="flex flex-col items-start sm:items-end gap-1.5">
-                    <span className={`${st.bg} border-2 border-neo-dark px-4 py-1 rounded-full font-black text-xs shadow-[2px_2px_0_0_#1E1E1E]`}>
-                      {st.label}
-                    </span>
+                    <div className="flex gap-1.5 items-center">
+                      {booking.coupon && (
+                        <span className="bg-[#FDE047] border-2 border-neo-dark px-2.5 py-0.5 rounded-md font-black text-[10px]">
+                          PROMO
+                        </span>
+                      )}
+                      <span className={`${st.bg} border-2 border-neo-dark px-4 py-1 rounded-full font-black text-xs shadow-[2px_2px_0_0_#1E1E1E]`}>
+                        {st.label}
+                      </span>
+                    </div>
                     <p className="font-bold text-gray-500 text-xs">{formatDate(booking.check_in)} — {formatDate(booking.check_out)}</p>
                     <button
                       onClick={() => setSelectedChatBooking(booking)}
@@ -205,9 +246,43 @@ const History = () => {
                 )}
 
                 {/* Show review comment if exists */}
-                {hasReview && booking.sitter_review.comment && (
+                {hasReview && booking.sitter_review?.comment && (
                   <div className="mt-2 bg-neo-bg border-2 border-dashed border-gray-300 rounded-lg p-2 text-xs font-bold text-gray-500 italic">
                     "{booking.sitter_review.comment}"
+                  </div>
+                )}
+
+                {/* GPS Check-in verification details */}
+                {isSitter && booking.checkin_distance_m !== null && (
+                  <div className="mt-2.5 bg-neo-bg border-2 border-neo-dark rounded-lg p-2.5 text-xs font-bold text-neo-dark flex justify-between items-center">
+                    <span>Lokasi Check-in Sitter:</span>
+                    <span className={booking.checkin_verified ? "text-green-700 font-black uppercase" : "text-red-600 font-black uppercase"}>
+                      {booking.checkin_verified ? `✅ Terverifikasi (${booking.checkin_distance_m}m)` : `❌ Di luar radius (${booking.checkin_distance_m}m)`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Refund status details */}
+                {booking.refund_status && (
+                  <div className="mt-2.5 bg-red-50 border-2 border-dashed border-red-300 rounded-lg p-2.5 text-xs font-bold text-red-700 flex justify-between items-center">
+                    <span>Status Refund Midtrans:</span>
+                    <span className="font-black uppercase">
+                      {booking.refund_status === 'pending' && '⏳ Diproses (Pending)'}
+                      {booking.refund_status === 'processed' && '✅ Selesai (Refunded)'}
+                      {booking.refund_status === 'failed' && '❌ Gagal / Tidak Memenuhi Syarat'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Sitter check-in button for approved status */}
+                {isSitter && booking.status === 'approved' && (
+                  <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300">
+                    <button
+                      onClick={() => handleSitterCheckin(booking.id)}
+                      className="bg-neo-yellow text-neo-dark border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      📍 Verifikasi Sitter Check-in (GPS)
+                    </button>
                   </div>
                 )}
 
@@ -219,7 +294,7 @@ const History = () => {
                     </p>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleCancelBooking(booking.id)}
+                        onClick={() => handleCancelBooking(booking.id, false)}
                         className="bg-red-400 text-white border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
                       >
                         Batal
@@ -231,6 +306,21 @@ const History = () => {
                         💳 Bayar Sekarang
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {/* Cancel button for PAID bookings (cancellable) */}
+                {booking.payment_status === 'paid' && (booking.status === 'pending' || booking.status === 'approved') && (
+                  <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <p className="text-xs font-bold text-gray-500">
+                      Kebijakan Refund: H-2 pembatalan
+                    </p>
+                    <button
+                      onClick={() => handleCancelBooking(booking.id, true)}
+                      className="bg-red-400 text-white border-3 border-neo-dark rounded-lg px-4 py-2 font-black text-xs shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+                    >
+                      Batalkan Pesanan & Refund
+                    </button>
                   </div>
                 )}
               </div>

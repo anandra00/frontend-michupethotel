@@ -29,6 +29,35 @@ const SitterBooking = () => {
   });
 
   const [adminFee, setAdminFee] = useState(5000);
+
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await api.post('/coupons/validate', {
+        code: couponCode,
+        subtotal: subtotal
+      });
+      setAppliedCoupon(res.data);
+      setDiscountAmount(res.data.discount);
+      showToast('Kupon promo berhasil diterapkan! 🎉', 'success');
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || 'Kupon tidak valid.';
+      setCouponError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
   
   const getDynamicPricePerDay = (pkg, catCount) => {
     if (!pkg) return 0;
@@ -110,6 +139,15 @@ const SitterBooking = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.start_date, form.end_date, form.visit_time]);
 
+  const days = calcDays();
+  const subtotal = packagePrice * days;
+
+  useEffect(() => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setCouponError('');
+  }, [subtotal]);
+
   const calcDays = () => {
     if (!form.start_date || !form.end_date) return 0;
     const d1 = new Date(form.start_date);
@@ -133,9 +171,7 @@ const SitterBooking = () => {
     });
   };
 
-  const days = calcDays();
-  const subtotal = packagePrice * days;
-  const total = form.cat_count > 0 ? (subtotal + adminFee) : 0;
+  const total = form.cat_count > 0 ? Math.max(0, subtotal - discountAmount + adminFee) : 0;
 
   const selectedCats = cats.filter(c => form.cat_ids.includes(c.id));
   const selectedSitter = sitters.find(s => String(s.id) === String(form.sitter_id));
@@ -164,6 +200,7 @@ const SitterBooking = () => {
         check_in: form.start_date,
         check_out: form.end_date,
         cat_ids: form.cat_ids,
+        coupon_code: appliedCoupon ? appliedCoupon.code : null,
         visit_time: selectedPackage?.name?.includes('2x') ? 'both' : (form.visit_time === 'pagi' ? 'morning' : 'afternoon'),
         notes: `[SITTER] Paket: ${selectedPackage?.name} | Kucing: ${catNamesString} | Waktu: ${selectedPackage?.name?.includes('2x') ? 'Pagi & Sore' : (form.visit_time === 'pagi' ? 'Pagi (08-11)' : 'Sore (15-18)')} | Sitter: ${selectedSitter?.name} | Alamat: ${user?.address} | ${form.notes}`,
       });
@@ -445,10 +482,62 @@ const SitterBooking = () => {
 
                 {days > 0 && (
                   <div className="border-t-4 border-neo-dark pt-4 mt-4">
+                    {/* Coupon Promo Block */}
+                    <div className="mb-4 bg-white/20 p-3 rounded-lg border-2 border-dashed border-white">
+                      <label className="block text-xs font-black uppercase mb-1">Punya Kode Kupon?</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="KODEPROMO"
+                          value={couponCode}
+                          onChange={e => {
+                            setCouponCode(e.target.value.toUpperCase());
+                            setCouponError('');
+                          }}
+                          disabled={!!appliedCoupon}
+                          className="flex-1 bg-white border-2 border-neo-dark rounded-md px-3 py-1.5 font-bold uppercase disabled:bg-gray-100 disabled:opacity-75 text-xs text-neo-dark"
+                        />
+                        {appliedCoupon ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAppliedCoupon(null);
+                              setDiscountAmount(0);
+                              setCouponCode('');
+                            }}
+                            className="bg-[#EF4444] text-white border-2 border-neo-dark rounded-md px-3 py-1.5 font-black hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all shadow-[1px_1px_0_0_#1E1E1E] text-xs"
+                          >
+                            Hapus
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleApplyCoupon}
+                            disabled={couponLoading || !couponCode.trim()}
+                            className="bg-[#FDE047] border-2 border-neo-dark rounded-md px-3 py-1.5 font-black hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all shadow-[1px_1px_0_0_#1E1E1E] disabled:opacity-50 text-xs"
+                          >
+                            {couponLoading ? '...' : 'Gunakan'}
+                          </button>
+                        )}
+                      </div>
+                      {couponError && <p className="text-red-600 text-[10px] font-black mt-1 bg-red-100/80 p-1 rounded border border-red-200">{couponError}</p>}
+                      {appliedCoupon && (
+                        <p className="text-green-800 text-[10px] font-black mt-1 bg-green-100/80 p-1 rounded border border-green-200">
+                          ✅ Kupon Berhasil: {appliedCoupon.description || `${appliedCoupon.code} digunakan`}
+                        </p>
+                      )}
+                    </div>
+
                     <div className="flex justify-between font-bold text-sm mb-2">
                       <span>{days} hari × Rp {packagePrice.toLocaleString('id-ID')}</span>
                       <span>Rp {subtotal.toLocaleString('id-ID')}</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between font-bold text-sm mb-2 text-green-800 bg-green-100/50 p-1 rounded">
+                        <span>Diskon Kupon</span>
+                        <span>-Rp {discountAmount.toLocaleString('id-ID')}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-bold text-sm mb-4">
                       <span>Biaya Admin</span>
                       <span>Rp {adminFee.toLocaleString('id-ID')}</span>

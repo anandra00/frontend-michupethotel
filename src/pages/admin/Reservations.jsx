@@ -358,6 +358,37 @@ const Reservations = () => {
                   </div>
                 )}
 
+                {/* Coupon Information */}
+                {booking.coupon && (
+                  <div className="bg-yellow-50 border-2 border-dashed border-yellow-300 rounded-lg p-2.5 mb-3 text-xs font-bold text-gray-700 flex justify-between items-center animate-scale-in">
+                    <span>🎟️ Kupon Promo:</span>
+                    <span className="font-black uppercase text-neo-dark">{booking.coupon.code} (-Rp {Number(booking.discount_amount).toLocaleString('id-ID')})</span>
+                  </div>
+                )}
+
+                {/* GPS Check-in details */}
+                {isSitter && booking.checkin_distance_m !== null && (
+                  <div className="bg-neo-bg border-2 border-neo-dark rounded-lg p-2.5 mb-3 text-xs font-bold text-neo-dark flex justify-between items-center">
+                    <span>📍 GPS Check-in Sitter:</span>
+                    <span className={booking.checkin_verified ? "text-green-700 font-black uppercase text-[10px]" : "text-red-600 font-black uppercase text-[10px]"}>
+                      {booking.checkin_verified ? `✅ Terverifikasi (${booking.checkin_distance_m}m)` : `❌ Di luar radius (${booking.checkin_distance_m}m)`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Refund Status Details */}
+                {booking.refund_status && (
+                  <div className="bg-red-50 border-2 border-dashed border-red-300 rounded-lg p-2.5 mb-3 text-xs font-bold text-red-700 flex justify-between items-center">
+                    <span>💵 Status Refund:</span>
+                    <span className="font-black uppercase text-red-700">
+                      {booking.refund_status === 'pending' && '⏳ Diproses (Pending)'}
+                      {booking.refund_status === 'processed' && '✅ Sukses (Refunded)'}
+                      {booking.refund_status === 'failed' && '❌ Gagal'}
+                      {booking.refund_amount > 0 && ` (Rp ${Number(booking.refund_amount).toLocaleString('id-ID')})`}
+                    </span>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-2 md:gap-3 flex-wrap">
                   {booking.status === 'pending' && (
@@ -373,6 +404,15 @@ const Reservations = () => {
                   {booking.status === 'approved' && (
                     <button onClick={() => updateStatus(booking.id, 'checked_in')} className="flex-1 bg-[#60A5FA] text-white border-4 border-neo-dark rounded-full py-2 font-black text-sm shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                       Check In
+                    </button>
+                  )}
+                  {(booking.status === 'pending' || booking.status === 'approved') && (
+                    <button onClick={() => {
+                      if (window.confirm('Batalkan pesanan ini? Jika pesanan sudah dibayar, pembatalan akan memicu refund otomatis (jika memenuhi syarat H-2).')) {
+                        updateStatus(booking.id, 'cancelled');
+                      }
+                    }} className="flex-1 bg-red-500 text-white border-4 border-neo-dark rounded-full py-2 font-black text-sm shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                      Cancel
                     </button>
                   )}
                   {booking.status === 'checked_in' && (
