@@ -422,7 +422,13 @@ const SitterBooking = () => {
                   <input type="date" value={form.end_date} onChange={e => setForm({...form, end_date: e.target.value})} className="w-full bg-white border-4 border-neo-dark rounded-lg p-3 font-bold focus:outline-none focus:ring-4 focus:ring-neo-pink" />
                 </div>
 
-                {!(selectedPackage?.name?.includes('2x')) && (
+                {selectedPackage?.name?.includes('2x') ? (
+                  <div className="bg-[#E0F2FE] border-3 border-neo-dark rounded-lg p-3 text-xs font-bold text-blue-900 shadow-[2px_2px_0_0_#1E1E1E]">
+                    <p className="font-black text-xs uppercase mb-1">📅 Jadwal Kunjungan (2x Sehari):</p>
+                    <p className="font-bold">• Kunjungan 1: <strong className="font-black">Pagi (08:00 - 11:00)</strong></p>
+                    <p className="font-bold">• Kunjungan 2: <strong className="font-black">Sore (15:00 - 18:00)</strong></p>
+                  </div>
+                ) : (
                   <div>
                     <label className="block text-xs font-black uppercase mb-2">Waktu Kunjungan</label>
                     <select value={form.visit_time} onChange={e => setForm({...form, visit_time: e.target.value})} className="w-full bg-white border-4 border-neo-dark rounded-lg p-3 font-bold focus:outline-none focus:ring-4 focus:ring-neo-pink">
