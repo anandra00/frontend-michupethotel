@@ -41,10 +41,10 @@ const LandingPage = () => {
             <img 
               src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50" 
               srcSet="
-                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=50 400w,
+                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=350&q=35 350w,
                 https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50 800w
               "
-              sizes="(max-width: 600px) 400px, 800px"
+              sizes="(max-width: 600px) 350px, 800px"
               alt="Cute cat" 
               fetchpriority="high"
               decoding="async"
