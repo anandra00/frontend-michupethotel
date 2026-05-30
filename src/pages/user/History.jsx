@@ -137,8 +137,14 @@ const History = () => {
     }
     snap.pay(booking.snap_token, {
       onSuccess: async function () {
-        // Payment status will be updated by Midtrans webhook callback (server-to-server)
-        showToast('Pembayaran berhasil! 🎉', 'success');
+        showToast('Memverifikasi pembayaran...', 'info');
+        try {
+          await api.post(`/bookings/${booking.id}/verify-payment`);
+          showToast('Pembayaran berhasil diverifikasi! 🎉', 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('Pembayaran berhasil! Menunggu konfirmasi sistem.', 'success');
+        }
         fetchBookings(currentPage);
       },
       onPending: function () {

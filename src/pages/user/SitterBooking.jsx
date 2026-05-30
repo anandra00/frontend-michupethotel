@@ -239,8 +239,14 @@ const SitterBooking = () => {
         }
         snap.pay(res.data.snap_token, {
           onSuccess: async function() {
-            // Payment status will be updated by Midtrans webhook callback (server-to-server)
-            showToast('Pembayaran Sitter berhasil!', 'success');
+            showToast('Memverifikasi pembayaran...', 'info');
+            try {
+              await api.post(`/bookings/${res.data.id}/verify-payment`);
+              showToast('Pembayaran berhasil diverifikasi! 🎉', 'success');
+            } catch (err) {
+              console.error(err);
+              showToast('Pembayaran berhasil! Menunggu konfirmasi sistem.', 'success');
+            }
             navigate('/dashboard/history');
           },
           onPending: function() {
