@@ -9,6 +9,7 @@
   --color-neo-blue: #A2D2FF;
   --color-neo-yellow: #FDEE87; /* Pastel yellow */
   --color-neo-orange: #FFD2A5; /* Light orange */
+  --color-neo-red: #FF4A4A; /* Vibrant red */
   --color-neo-dark: #1E1E1E; /* Thick black outline */
   
   --shadow-neo: 6px 6px 0px 0px var(--color-neo-dark);
