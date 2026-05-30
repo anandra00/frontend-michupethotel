@@ -36,11 +36,13 @@ const SitterBooking = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setCouponLoading(true);
     setCouponError('');
+    setIsExpired(false);
     try {
       const res = await api.post('/coupons/validate', {
         code: couponCode,
@@ -48,11 +50,17 @@ const SitterBooking = () => {
       });
       setAppliedCoupon(res.data);
       setDiscountAmount(res.data.discount);
+      setIsExpired(false);
       showToast('Kupon promo berhasil diterapkan! 🎉', 'success');
     } catch (err) {
       console.error(err);
       const msg = err.response?.data?.message || 'Kupon tidak valid.';
       setCouponError(msg);
+      if (msg.toLowerCase().includes('kedaluwarsa') || msg.toLowerCase().includes('expired')) {
+        setIsExpired(true);
+      } else {
+        setIsExpired(false);
+      }
       showToast(msg, 'error');
     } finally {
       setCouponLoading(false);
@@ -146,6 +154,7 @@ const SitterBooking = () => {
     setAppliedCoupon(null);
     setDiscountAmount(0);
     setCouponError('');
+    setIsExpired(false);
   }, [subtotal]);
 
   const calcDays = () => {
@@ -484,7 +493,14 @@ const SitterBooking = () => {
                   <div className="border-t-4 border-neo-dark pt-4 mt-4">
                     {/* Coupon Promo Block */}
                     <div className="mb-4 bg-white/20 p-3 rounded-lg border-2 border-dashed border-white">
-                      <label className="block text-xs font-black uppercase mb-1">Punya Kode Kupon?</label>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-xs font-black uppercase">Punya Kode Kupon?</label>
+                        {isExpired && (
+                          <span className="bg-[#EF4444] text-white text-[9px] font-black px-2 py-0.5 rounded border-2 border-neo-dark shadow-[1px_1px_0_0_#1E1E1E] animate-pulse">
+                            EXPIRED / KADALUWARSA
+                          </span>
+                        )}
+                      </div>
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -493,6 +509,7 @@ const SitterBooking = () => {
                           onChange={e => {
                             setCouponCode(e.target.value.toUpperCase());
                             setCouponError('');
+                            setIsExpired(false);
                           }}
                           disabled={!!appliedCoupon}
                           className="flex-1 bg-white border-2 border-neo-dark rounded-md px-3 py-1.5 font-bold uppercase disabled:bg-gray-100 disabled:opacity-75 text-xs text-neo-dark"
@@ -504,6 +521,7 @@ const SitterBooking = () => {
                               setAppliedCoupon(null);
                               setDiscountAmount(0);
                               setCouponCode('');
+                              setIsExpired(false);
                             }}
                             className="bg-[#EF4444] text-white border-2 border-neo-dark rounded-md px-3 py-1.5 font-black hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all shadow-[1px_1px_0_0_#1E1E1E] text-xs"
                           >
