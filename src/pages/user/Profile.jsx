@@ -237,12 +237,14 @@ const Profile = () => {
               >
                 <Edit size={16} /> Edit Profile
               </button>
-              <button
-                onClick={handleSendTestNotif}
-                className="w-full flex items-center justify-center gap-2 bg-neo-pink text-white border-4 border-neo-dark rounded-lg py-2 font-black shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all mt-2"
-              >
-                <Bell size={16} /> Test Notification
-              </button>
+              {user?.role === 'admin' && (
+                <button
+                  onClick={handleSendTestNotif}
+                  className="w-full flex items-center justify-center gap-2 bg-neo-pink text-white border-4 border-neo-dark rounded-lg py-2 font-black shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all mt-2"
+                >
+                  <Bell size={16} /> Test Notification
+                </button>
+              )}
            </div>
         </div>
 

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { Bell, Info, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useToast } from './Toast';
+import { AuthContext } from '../context/AuthContext';
 
 const NotificationWidget = ({ isOpen, onClose }) => {
   const [notifications, setNotifications] = useState([]);
@@ -10,6 +11,7 @@ const NotificationWidget = ({ isOpen, onClose }) => {
   const widgetRef = useRef(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useContext(AuthContext);
 
   const handleSendTestNotif = async () => {
     try {
@@ -112,14 +114,16 @@ const NotificationWidget = ({ isOpen, onClose }) => {
             <Bell className="w-8 h-8 text-neo-dark opacity-50" />
             <div>
               <p className="font-bold text-neo-dark">Belum ada notifikasi</p>
-              <p className="text-xs text-gray-500 mt-1">Uji coba fitur notifikasi real-time di bawah ini:</p>
+              {user?.role === 'admin' && <p className="text-xs text-gray-500 mt-1">Uji coba fitur notifikasi real-time di bawah ini:</p>}
             </div>
-            <button
-              onClick={handleSendTestNotif}
-              className="bg-neo-pink text-white font-bold px-4 py-2 rounded-full border-3 border-neo-dark shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-xs"
-            >
-              Kirim Notifikasi Uji Coba 🔔
-            </button>
+            {user?.role === 'admin' && (
+              <button
+                onClick={handleSendTestNotif}
+                className="bg-neo-pink text-white font-bold px-4 py-2 rounded-full border-3 border-neo-dark shadow-[2px_2px_0_0_#1E1E1E] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all text-xs"
+              >
+                Kirim Notifikasi Uji Coba 🔔
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col">
