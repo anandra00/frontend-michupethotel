@@ -32,12 +32,11 @@ const SitterBooking = () => {
   
   const getDynamicPricePerDay = (pkg, catCount) => {
     if (!pkg) return 0;
-    const is2x = pkg.name?.includes('2x');
     
     // Tiered pricing:
-    // 1-2 cats: 60k for 1x, 120k for 2x
-    // 3-4 cats: 80k for 1x, 160k for 2x
-    // 5+ cats: 120k for 1x, 240k for 2x
+    // 1-2 cats: 60k
+    // 3-4 cats: 80k
+    // 5+ cats: 120k
     let basePrice = 60000;
     if (catCount >= 3 && catCount <= 4) {
       basePrice = 80000;
@@ -45,7 +44,7 @@ const SitterBooking = () => {
       basePrice = 120000;
     }
     
-    return is2x ? basePrice * 2 : basePrice;
+    return basePrice;
   };
 
   const selectedPackage = packages.find(p => String(p.id) === String(packageType));
