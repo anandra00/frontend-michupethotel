@@ -40,10 +40,7 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-neo-blue rounded-full border-4 border-neo-dark translate-x-4 translate-y-4 shadow-neo"></div>
             <img 
               src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50" 
-              srcSet="
-                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=350&q=35 350w,
-                https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50 800w
-              "
+              srcSet="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=350&q=35 350w, https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=50 800w"
               sizes="(max-width: 600px) 350px, 800px"
               alt="Cute cat" 
               fetchpriority="high"
