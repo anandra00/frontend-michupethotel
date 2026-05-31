@@ -499,6 +499,7 @@ const SitterBooking = () => {
                       sitterId={form.sitter_id}
                       checkIn={form.start_date}
                       checkOut={form.end_date}
+                      visitTime={selectedPackage?.name?.includes('2x') ? 'both' : (form.visit_time === 'pagi' ? 'morning' : 'afternoon')}
                       onChange={(start, end) => {
                         setForm(prev => ({
                           ...prev,

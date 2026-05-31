@@ -9,7 +9,7 @@ const MONTH_NAMES = [
 
 const DAYS_OF_WEEK = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
-const isDateOccupied = (date, occupiedRanges, type) => {
+const isDateOccupied = (date, occupiedRanges, type, currentVisitTime) => {
   if (!date) return false;
   const dStr = date.toISOString().split('T')[0];
   
@@ -21,8 +21,13 @@ const isDateOccupied = (date, occupiedRanges, type) => {
       // Boarding occupies from check_in day up to the day before check_out
       return dStr >= start && dStr < end;
     } else {
-      // Sitter occupies all days in range inclusive
-      return dStr >= start && dStr <= end;
+      // Sitter occupies all days in range inclusive, but check shift
+      if (dStr >= start && dStr <= end) {
+        if (!currentVisitTime || currentVisitTime === 'both') return true;
+        if (range.visit_time === 'both') return true;
+        if (range.visit_time === currentVisitTime) return true;
+      }
+      return false;
     }
   });
 };
@@ -33,7 +38,7 @@ const isDateBetween = (date, startStr, endStr) => {
   return dStr >= startStr && dStr <= endStr;
 };
 
-const AvailabilityCalendar = ({ roomId, sitterId, checkIn, checkOut, onChange, type }) => {
+const AvailabilityCalendar = ({ roomId, sitterId, checkIn, checkOut, onChange, type, visitTime }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [occupiedRanges, setOccupiedRanges] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -97,7 +102,7 @@ const AvailabilityCalendar = ({ roomId, sitterId, checkIn, checkOut, onChange, t
     if (date < today) return;
     
     // 2. Cannot pick occupied dates
-    if (isDateOccupied(date, occupiedRanges, type)) return;
+    if (isDateOccupied(date, occupiedRanges, type, visitTime)) return;
 
     if (!checkIn || (checkIn && checkOut)) {
       // First click: set checkIn
@@ -116,7 +121,7 @@ const AvailabilityCalendar = ({ roomId, sitterId, checkIn, checkOut, onChange, t
         let temp = new Date(checkIn);
         const target = new Date(dateStr);
         while (temp <= target) {
-          if (isDateOccupied(temp, occupiedRanges, type)) {
+          if (isDateOccupied(temp, occupiedRanges, type, visitTime)) {
             hasConflict = true;
             break;
           }
@@ -172,7 +177,7 @@ const AvailabilityCalendar = ({ roomId, sitterId, checkIn, checkOut, onChange, t
 
             const dateStr = date.toISOString().split('T')[0];
             const isPast = date < today;
-            const isOccupied = isDateOccupied(date, occupiedRanges, type);
+            const isOccupied = isDateOccupied(date, occupiedRanges, type, visitTime);
             const isToday = date.getTime() === today.getTime();
             
             const isSelectedCheckin = checkIn === dateStr;
