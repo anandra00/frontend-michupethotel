@@ -34,9 +34,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    const res = await api.post('/register', { name, email, password });
+    const res = await api.post('/register', { name, email, password, password_confirmation: password });
+    return res.data;
+  };
+
+  const verifyOtp = async (email, otp) => {
+    const res = await api.post('/verify-otp', { email, otp });
     sessionStorage.setItem('token', res.data.access_token);
     setUser(res.data.user);
+    return res.data;
+  };
+
+  const resendOtp = async (email) => {
+    const res = await api.post('/resend-otp', { email });
     return res.data;
   };
 
@@ -64,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser, refreshUser, verifyOtp, resendOtp }}>
       {children}
     </AuthContext.Provider>
   );

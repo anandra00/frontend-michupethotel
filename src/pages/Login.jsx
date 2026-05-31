@@ -21,7 +21,12 @@ const Login = () => {
       toast.success("Welcome back! 🐾");
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      if (err.response?.data?.email_not_verified) {
+        toast.error("Akun belum diverifikasi, silakan masukkan OTP.");
+        navigate('/verify-otp', { state: { email } });
+      } else {
+        setError(err.response?.data?.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }

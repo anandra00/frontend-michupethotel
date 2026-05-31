@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const VerifyOtp = lazy(() => import('./pages/VerifyOtp'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ManageRooms = lazy(() => import('./pages/admin/ManageRooms'));
@@ -47,6 +48,7 @@ function AnimatedRoutes() {
           <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+          <Route path="/verify-otp" element={<PageTransition><VerifyOtp /></PageTransition>} />
           
           {/* User Routes — harus login */}
           <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
