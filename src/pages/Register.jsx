@@ -5,9 +5,10 @@ import { HeartPulse } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Register = () => {
-  const [name, setName] = useState('');
+    const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { register } = useContext(AuthContext);
@@ -16,9 +17,15 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    
+    if (password !== confirmPassword) {
+      setError("Password dan Konfirmasi Password tidak cocok.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, confirmPassword);
       toast.success("Kode OTP telah dikirim ke email kamu.");
       navigate('/verify-otp', { state: { email } }); 
     } catch (err) {
@@ -80,6 +87,19 @@ const Register = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">Konfirmasi Password</label>
+            <input 
+              type="password" 
+              className="neo-input" 
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={8}
             />
