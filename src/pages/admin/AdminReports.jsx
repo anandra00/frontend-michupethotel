@@ -24,6 +24,24 @@ const AdminReports = () => {
     fetchReports();
   }, []);
 
+  const handleExport = async (type) => {
+    try {
+      const response = await api.get(`/admin/reports/export/${type}`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `laporan_booking_michu.${type === 'excel' ? 'xlsx' : 'pdf'}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error(`Error exporting ${type}:`, error);
+      alert('Gagal mengunduh file.');
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -123,12 +141,30 @@ const AdminReports = () => {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-8 border-b-4 border-neo-dark pb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Award size={36} className="text-neo-pink bg-neo-yellow border-4 border-neo-dark p-1.5 rounded-xl shadow-[2px_2px_0_0_#1E1E1E]" />
-          <h1 className="text-4xl font-black uppercase tracking-tight">Reports & Analytics</h1>
+      <div className="mb-8 border-b-4 border-neo-dark pb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Award size={36} className="text-neo-pink bg-neo-yellow border-4 border-neo-dark p-1.5 rounded-xl shadow-[2px_2px_0_0_#1E1E1E]" />
+            <h1 className="text-4xl font-black uppercase tracking-tight">Reports & Analytics</h1>
+          </div>
+          <p className="text-gray-600 font-medium text-lg">Interactive real-time monitoring of MeowStay business operations and metrics.</p>
         </div>
-        <p className="text-gray-600 font-medium text-lg">Interactive real-time monitoring of MeowStay business operations and metrics.</p>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => handleExport('excel')}
+            className="neo-btn bg-[#10B981] hover:bg-[#059669] text-white flex items-center gap-2"
+          >
+            <DollarSign size={20} />
+            Download Excel
+          </button>
+          <button 
+            onClick={() => handleExport('pdf')}
+            className="neo-btn bg-[#EF4444] hover:bg-[#DC2626] text-white flex items-center gap-2"
+          >
+            <Activity size={20} />
+            Download PDF
+          </button>
+        </div>
       </div>
 
       {/* Monthly Summary Cards */}
