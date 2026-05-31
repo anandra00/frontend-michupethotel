@@ -4,6 +4,7 @@ import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import api from '../../api/axios';
 import { useToast } from '../../components/Toast';
+import AvailabilityCalendar from '../../components/AvailabilityCalendar';
 
 const BookingModal = ({ 
   isOpen, 
@@ -141,6 +142,29 @@ const BookingModal = ({
               className="w-full bg-neo-bg border-3 border-neo-dark rounded-lg p-2.5 font-bold text-sm focus:outline-none focus:ring-4 focus:ring-neo-pink transition-all" 
             />
           </div>
+        </div>
+
+        {/* Availability Calendar */}
+        <div className="border-3 border-neo-dark rounded-xl p-4 bg-white shadow-[2px_2px_0_0_#1E1E1E]">
+          <p className="font-black text-xs uppercase mb-2 flex items-center gap-1.5 text-neo-dark">
+            📅 Kalender Ketersediaan Kamar
+          </p>
+          <AvailabilityCalendar 
+            roomId={selectedRoom.id}
+            checkIn={bookingForm.check_in}
+            checkOut={bookingForm.check_out}
+            onChange={(start, end) => {
+              setBookingForm(prev => ({
+                ...prev,
+                check_in: start || '',
+                check_out: end || ''
+              }));
+            }}
+            type="board"
+          />
+          <p className="text-[10px] text-gray-500 font-bold mt-2">
+            💡 Klik tanggal pada kalender di atas untuk memilih rentang menginap secara otomatis.
+          </p>
         </div>
 
         {/* Pilih Kucing spesifik */}

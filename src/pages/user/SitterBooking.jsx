@@ -6,6 +6,7 @@ import api from '../../api/axios';
 import { Camera, Clock, CheckCircle2, UtensilsCrossed, AlertCircle, Star, MapPin } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { loadSnapScript } from '../../utils/snap';
+import AvailabilityCalendar from '../../components/AvailabilityCalendar';
 
 const VISIT_TIME_MAP = {
   pagi_awal: 'Pagi Awal (07:00 - 09:00)',
@@ -488,6 +489,30 @@ const SitterBooking = () => {
                   <label className="block text-xs font-black uppercase mb-2">Tanggal Selesai</label>
                   <input type="date" value={form.end_date} onChange={e => setForm({...form, end_date: e.target.value})} className="w-full bg-white border-4 border-neo-dark rounded-lg p-3 font-bold focus:outline-none focus:ring-4 focus:ring-neo-pink" />
                 </div>
+
+                {form.sitter_id && (
+                  <div className="border-4 border-neo-dark rounded-xl p-4 bg-white shadow-[2px_2px_0_0_#1E1E1E]">
+                    <p className="font-black text-xs uppercase mb-2 flex items-center gap-1.5 text-neo-dark">
+                      📅 Kalender Ketersediaan Sitter
+                    </p>
+                    <AvailabilityCalendar 
+                      sitterId={form.sitter_id}
+                      checkIn={form.start_date}
+                      checkOut={form.end_date}
+                      onChange={(start, end) => {
+                        setForm(prev => ({
+                          ...prev,
+                          start_date: start || '',
+                          end_date: end || ''
+                        }));
+                      }}
+                      type="sitter"
+                    />
+                    <p className="text-[10px] text-gray-500 font-bold mt-2">
+                      💡 Klik tanggal pada kalender di atas untuk memilih rentang kunjungan sitter secara otomatis.
+                    </p>
+                  </div>
+                )}
 
                 {selectedPackage?.name?.includes('2x') ? (
                   <div className="bg-[#E0F2FE] border-4 border-neo-dark rounded-xl p-4 shadow-[2px_2px_0_0_#1E1E1E] space-y-3">

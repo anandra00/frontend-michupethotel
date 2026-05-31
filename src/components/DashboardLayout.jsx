@@ -37,6 +37,57 @@ const DashboardLayout = ({ children }) => {
     return () => clearInterval(interval);
   }, [user]);
 
+  useEffect(() => {
+    const setupWebPush = async () => {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return;
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
+        
+        if (Notification.permission === 'default') {
+          await Notification.requestPermission();
+        }
+
+        if (Notification.permission !== 'granted') {
+          return;
+        }
+
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          const res = await api.get('/vapid-key');
+          const vapidPublicKey = res.data.public_key;
+          
+          if (!vapidPublicKey) {
+            console.log('WebPush: VAPID public key not set in environment.');
+            return;
+          }
+
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: vapidPublicKey,
+          });
+        }
+
+        const rawSub = subscription.toJSON();
+        await api.post('/push-subscriptions', {
+          endpoint: rawSub.endpoint,
+          keys: {
+            p256dh: rawSub.keys.p256dh,
+            auth: rawSub.keys.auth
+          }
+        });
+      } catch (err) {
+        console.error('Failed to configure WebPush:', err);
+      }
+    };
+
+    if (user) {
+      setupWebPush();
+    }
+  }, [user]);
+
   const handleLogout = async () => {
     await logout();
     navigate('/');

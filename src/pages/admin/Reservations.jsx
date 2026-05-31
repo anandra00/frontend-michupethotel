@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import { Star, MapPin, Trash2, X, FileText, Camera, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import ChatDrawer from '../../components/ChatDrawer';
+import AvailabilityCalendar from '../../components/AvailabilityCalendar';
 
 const STATUS_MAP = {
   pending: { label: 'Pending', bg: 'bg-neo-yellow' },
@@ -547,6 +548,20 @@ const Reservations = () => {
                 ))}
               </select>
             </div>
+
+            {selectedNewSitter && (
+              <div className="mb-6 border-4 border-neo-dark rounded-xl p-4 bg-white shadow-[2px_2px_0_0_#1E1E1E]">
+                <p className="font-black text-xs uppercase mb-2 flex items-center gap-1.5 text-neo-dark">
+                  📅 Kalender Ketersediaan Sitter Baru
+                </p>
+                <AvailabilityCalendar 
+                  sitterId={selectedNewSitter}
+                  checkIn={reassignModal.check_in}
+                  checkOut={reassignModal.check_out}
+                  type="sitter"
+                />
+              </div>
+            )}
 
             <button 
               onClick={handleReassign}

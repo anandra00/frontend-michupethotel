@@ -35,15 +35,58 @@ const ChatDrawer = ({ booking, onClose }) => {
     }
   };
 
-  // Fetch on mount and start 5s short polling
+  // Fetch message history and start SSE real-time stream
   useEffect(() => {
-    fetchMessages();
+    if (!booking) return;
 
-    const interval = setInterval(() => {
-      fetchMessages(true);
-    }, 5000);
+    let active = true;
+    let eventSource = null;
 
-    return () => clearInterval(interval);
+    const startStreaming = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(`/bookings/${booking.id}/messages`);
+        if (!active) return;
+        setMessages(res.data);
+        setLoading(false);
+
+        const lastId = res.data.length > 0 ? res.data[res.data.length - 1].id : 0;
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+        const token = sessionStorage.getItem('token');
+
+        const streamUrl = `${baseUrl}/bookings/${booking.id}/messages/stream?token=${token}&last_id=${lastId}`;
+        eventSource = new EventSource(streamUrl);
+
+        eventSource.onmessage = (event) => {
+          try {
+            const newMsg = JSON.parse(event.data);
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+          } catch (e) {
+            console.error('Failed to parse stream message:', e);
+          }
+        };
+
+        eventSource.onerror = (err) => {
+          console.error('EventSource error:', err);
+        };
+
+      } catch (err) {
+        console.error('Failed to start chat stream:', err);
+        setLoading(false);
+      }
+    };
+
+    startStreaming();
+
+    return () => {
+      active = false;
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [booking?.id]);
 

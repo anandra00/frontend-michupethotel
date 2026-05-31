@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { useCache } from '../context/CacheContext';
 import { Navigate, Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import api, { BACKEND_URL } from '../api/axios';
@@ -7,9 +8,11 @@ import { BedDouble, Home as HomeIcon, History, Rabbit } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState({ active_bookings_count: 0, total_cost: 0, has_checked_in: false, has_checked_in_board: false });
-  const [cats, setCats] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { getCache, setCacheValue } = useCache();
+  
+  const [stats, setStats] = useState(() => getCache('/user/stats') || { active_bookings_count: 0, total_cost: 0, has_checked_in: false, has_checked_in_board: false });
+  const [cats, setCats] = useState(() => getCache('/cats') || []);
+  const [loading, setLoading] = useState(() => !(getCache('/user/stats') && getCache('/cats')));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,6 +24,8 @@ const Dashboard = () => {
         ]);
         setStats(statsRes.data);
         setCats(cRes.data);
+        setCacheValue('/user/stats', statsRes.data);
+        setCacheValue('/cats', cRes.data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -28,7 +33,7 @@ const Dashboard = () => {
       }
     };
     if (user && user.role !== 'admin') fetchData();
-  }, [user]);
+  }, [user, getCache, setCacheValue]);
 
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
