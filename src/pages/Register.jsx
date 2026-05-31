@@ -26,8 +26,8 @@ const Register = () => {
     setLoading(true);
     try {
       await register(name, email, password, confirmPassword);
-      toast.success("Kode OTP telah dikirim ke email kamu.");
-      navigate('/verify-otp', { state: { email } }); 
+      toast.success("Welcome to Michu MeowStay! 🎉");
+      navigate('/dashboard'); 
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
